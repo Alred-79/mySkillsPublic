@@ -2,7 +2,7 @@
 
 The hardened protocol that makes "replay real traces only" enforceable rather than aspirational. This is the release contract: a microworld ships only when every gate here passes, or it does not ship. It supersedes any older draft protocol.
 
-Read this when writing the adapter (Phase 1) and when running the check gates. The reference implementation in this repo's `examples/` is a working instance of everything below, with its shortfalls (no OS sandbox receipt) recorded honestly in its receipts - read it alongside this file as the concrete template.
+Read this when writing the adapter (Phase 1) and when running the check gates. `references/reference-implementation.md` describes a working instance of everything below - the adapter shape, the capture-validate-build flow, and each gate on a real Werkzeug commit - with its shortfalls (no OS sandbox receipt) recorded honestly. Read it alongside this file as the self-contained concrete template.
 
 ## Contents
 

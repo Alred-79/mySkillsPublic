@@ -10,7 +10,7 @@ EDA + deep statistical analysis with enforced rigor. A user points the skill at 
 and a question; the skill runs a goal-conditioned, gate-enforced pipeline from profiling
 through inference to communication, where every gate corresponds to a *documented* AI
 failure mode. The persona framing matters: an o1 case study went 3/10 → 9/10 on
-Simpson's-paradox decisions from a "careful statistician" directive alone — directives
+Simpson's-paradox decisions from a "careful statistician" directive alone - directives
 work, and this skill is a system of them.
 
 ## Market position (researched + adversarially verified 2026-07)
@@ -24,24 +24,24 @@ work, and this skill is a system of them.
 - Novel territory (verified, with prior-art caveat): **goal-conditioned rigor tiers**
   (nothing exists), **EDA→inference bridge with multiplicity control** (no skill exists;
   concept prior art = "Agentic Garden of Forking Paths" m-value / Agentic Bootstrap,
-  arXiv 2607.01507 — cite and build on it, first skill implementation), **implicit test
+  arXiv 2607.01507 - cite and build on it, first skill implementation), **implicit test
   counter**, **statistic provenance**, **join audits as default behavior**.
 
 ## Evidence base (all verified against primary sources)
 
-Design is failure-mode-driven. Anchors: StatQA (arXiv 2406.07815 — applicability errors
-are LLMs' dominant class; best model 64.83%); "LLM hacking" (arXiv 2509.08825 — analytic
-configuration choices flip ~31% of conclusions); CausalPitfalls (arXiv 2505.13770 —
+Design is failure-mode-driven. Anchors: StatQA (arXiv 2406.07815 - applicability errors
+are LLMs' dominant class; best model 64.83%); "LLM hacking" (arXiv 2509.08825 - analytic
+configuration choices flip ~31% of conclusions); CausalPitfalls (arXiv 2505.13770 -
 subgroup blindness); DABstep (implicit-rule planning failures); Kapoor–Narayanan leakage
 taxonomy (≥294 papers); Pimentel notebook reproducibility (24.11% re-execute, 4.03%
 reproduce); deepsense EDA reliability (run-to-run variance dominates); AIRepr
 analyst–inspector (arXiv 2502.16395); Gelman et al. Bayesian workflow (arXiv 2011.01808);
-STRATOS IDA framework. (Enterprise text-to-SQL collapse — Spider 2.0 site, GPT-4o 86.6%
-→ 10.1% — motivates the SQL-source variant below.)
+STRATOS IDA framework. (Enterprise text-to-SQL collapse - Spider 2.0 site, GPT-4o 86.6%
+→ 10.1% - motivates the SQL-source variant below.)
 
 ## Invocation & data sources
 
-`/statistician [dataset-or-question] [tier]` — with no args, operates on the dataset and
+`/statistician [dataset-or-question] [tier]` - with no args, operates on the dataset and
 question in conversation context.
 
 Data-source routing (resolved in Phase 0):
@@ -73,19 +73,19 @@ statistician/
 The two-stage benchmark definition lives in `evals/`; the shared runner/aggregator
 harness is repo-level (skill-creator tooling), so the skill payload stays lean.
 
-Scripts replace judgment (baygent's `check_diagnostics.py` pattern — the LLM cannot
+Scripts replace judgment (baygent's `check_diagnostics.py` pattern - the LLM cannot
 rationalize numbers a script has already ruled on):
-- `assumption_gate.py` — normality, variance homogeneity; independence *partially*:
+- `assumption_gate.py` - normality, variance homogeneity; independence *partially*:
   Durbin–Watson given a declared time order, duplicate-key detection. Full independence
-  is NOT scriptable — the sampling design (clustered? repeated measures?) is elicited in
+  is NOT scriptable - the sampling design (clustered? repeated measures?) is elicited in
   Phase 0 and consumed by the script.
-- `join_audit.py` — pre/post row counts, key uniqueness, dtype match on both sides,
+- `join_audit.py` - pre/post row counts, key uniqueness, dtype match on both sides,
   grain assertion (pandas `validate=` / SQL count checks).
-- `multiplicity_audit.py` — reads the test-counter log (mechanism below) → BH-FDR.
-- `provenance_table.py` — builds the provenance table from the execution log (below).
-- `bayes_diagnostics.py` — ArviZ-based deterministic verdicts (R-hat, ESS, divergences,
+- `multiplicity_audit.py` - reads the test-counter log (mechanism below) → BH-FDR.
+- `provenance_table.py` - builds the provenance table from the execution log (below).
+- `bayes_diagnostics.py` - ArviZ-based deterministic verdicts (R-hat, ESS, divergences,
   LOO warnings) for the vendored Bayesian path.
-- `causal_verb_scan.py` — greps report drafts for causal verbs ("drives", "causes",
+- `causal_verb_scan.py` - greps report drafts for causal verbs ("drives", "causes",
   "leads to", "because of", "results in") lacking a declared identification strategy.
 
 **Execution-log invariant (provenance by construction):** all analysis code runs through
@@ -99,7 +99,7 @@ is deterministic; the old "reverse-match prose to output" design was not.
 (top-to-bottom script or restart-run-all notebook), seeds set, versions pinned. Tiering
 controls whether it is *re-run and diffed*, not whether it is runnable.
 
-## Rigor tiers — the tier×gate matrix
+## Rigor tiers - the tier×gate matrix
 
 Elicited in Phase 0 (one round; "go ahead" = infer from stakes language). The final
 report states the tier and what was NOT done because of it.
@@ -108,7 +108,7 @@ report states the tier and what was NOT done because of it.
 |---|---|---|---|
 | Goal + KPI elicitation, docs read | required | required | required |
 | Data audit + join audits + cleaning evidence | required | required | required |
-| Confirmation strategy (holdout or FDR-mode, declared BEFORE Phase 2) | skipped — all findings labeled exploratory | required | required |
+| Confirmation strategy (holdout or FDR-mode, declared BEFORE Phase 2) | skipped - all findings labeled exploratory | required | required |
 | Implicit test counter | count + label ("N patterns scanned, uncorrected") | count + BH-FDR | count + BH-FDR |
 | Subgroup/strata re-run of headline findings | 1 stratifier | 2–3 stratifiers | 2–3 + sensitivity to stratifier choice |
 | Pre-registered plan + deviation log | skipped (exploratory label instead) | required | required |
@@ -121,34 +121,34 @@ report states the tier and what was NOT done because of it.
 | Analyst–inspector reproduction | no | yes (via adversarial-verify) | yes |
 | adversarial-verify on final claims | optional | required | required (high effort, 3-lens) |
 
-Conflict rule: where a phase gate and this matrix disagree, **the matrix wins** — it is
+Conflict rule: where a phase gate and this matrix disagree, **the matrix wins** - it is
 the single source of tier truth.
 
 ## Flow
 
-**Phase 0 — Goal elicitation + confirmation strategy (one round; "go ahead" = infer).**
+**Phase 0 - Goal elicitation + confirmation strategy (one round; "go ahead" = infer).**
 - What decision does this inform? Confirmatory or exploratory? → rigor tier (matrix).
-- KPI/metric definitions pulled from docs or asked — never improvised (goal-ambiguity
+- KPI/metric definitions pulled from docs or asked - never improvised (goal-ambiguity
   failure: insight recovery drops ~60%→40% when objectives are ambiguous).
-- Sampling design declared (clustered/repeated/independent) — consumed by
+- Sampling design declared (clustered/repeated/independent) - consumed by
   `assumption_gate.py`.
 - Read ALL supplied documentation/data dictionaries before coding; restate extracted
   rules (DABstep implicit-rule failure).
 - **At decision-grade+: the confirmation strategy is fixed HERE, before any exploration**
-  — either a holdout split created now, or declared FDR-accounting mode with the counter
+  - either a holdout split created now, or declared FDR-accounting mode with the counter
   scope frozen. (Adversarial-review finding 1: pre-registration after exploration is the
   forking-paths failure itself.)
 
-**Phase 1 — Data audit (STRATOS IDA discipline).** Route through installed skills where
+**Phase 1 - Data audit (STRATOS IDA discipline).** Route through installed skills where
 present (hybrid rule): programmatic-eda profiling, data-quality-audit validators. Added
 gates: per-step evidence printing (dtypes, null counts, row-count deltas, date min/max,
 sample; day/month swap check; no silent coercion); **join audit on every merge**
 (`join_audit.py`); missing-data mechanism handling per matrix; IDA report of
 interpretation-affecting cleaning actions.
 
-**Phase 2 — Exploration with multiplicity discipline (the EDA→inference bridge).**
+**Phase 2 - Exploration with multiplicity discipline (the EDA→inference bridge).**
 - **Test counter mechanism**: (a) runtime shim counts scriptable tests (scipy.stats
-  calls, `.corr()` cell counts); (b) stated honor rule for the uninstrumentable rest —
+  calls, `.corr()` cell counts); (b) stated honor rule for the uninstrumentable rest -
   any displayed table with ≥2 groups increments the counter by its comparison count.
   Counter handling per matrix.
 - Anchoring counter: ≥3 candidate hypotheses before deep-diving one.
@@ -156,26 +156,26 @@ interpretation-affecting cleaning actions.
 - Exploratory findings labeled as such; confirmatory claims only via the Phase-0
   strategy (m-value-inspired; arXiv 2607.01507).
 
-**Phase 3 — Inference.**
+**Phase 3 - Inference.**
 - At decision-grade+: analysis plan (variables, transforms, test, decision rule) written
   before any confirmatory test runs on the confirmation set; deviations logged.
 - **Assumption gate before any test** (`assumption_gate.py`): the test is chosen FROM
-  the check results — never named first (StatQA countermeasure). Routing: parametric /
+  the check results - never named first (StatQA countermeasure). Routing: parametric /
   nonparametric (Mann-Whitney, Kruskal-Wallis, permutation) / bootstrap.
 - Effect sizes with interpretation + CIs always; a-priori power where applicable;
   post-hoc power banned (sensitivity analysis instead).
 - Causal language discipline: associational wording unless an identification strategy is
-  declared; rival-hypothesis steelmanning — state what would DISCONFIRM the user's
+  declared; rival-hypothesis steelmanning - state what would DISCONFIRM the user's
   hypothesis and test ≥1 rival before endorsing (anti-sycophancy).
 - For experiment data: route to installed ab-test-analysis (SRM, power, guardrails);
   statistician's gates (multiplicity, effect sizes, provenance) still apply on top.
-  analysis-assumptions-log, if installed, is superseded by the deviation log — do not
+  analysis-assumptions-log, if installed, is superseded by the deviation log - do not
   run both.
 - **Bayesian route (hybrid)**: vendored condensed workflow (references/bayesian-
   condensed.md): generative model → justified priors → prior predictive BEFORE fitting →
   convergence gate enforced by `bayes_diagnostics.py` (never LLM judgment) → posterior
   predictive → LOO; credible intervals, never point estimates alone. If baygent/
-  pymc-labs skills are installed, invoke them instead — **their outputs still pass
+  pymc-labs skills are installed, invoke them instead - **their outputs still pass
   Phase 4 gates** (provenance, multiplicity, inspector).
 - Leakage gates for any modeling: split before fitting-dependent preprocessing;
   Kapoor–Narayanan info-sheet (references/leakage-info-sheet.md).
@@ -184,18 +184,18 @@ interpretation-affecting cleaning actions.
   available headroom, n exceeding population, subgroup counts exceeding totals,
   variance ≤ 0, perfect scores on noisy data.
 
-**Phase 4 — Verification.**
+**Phase 4 - Verification.**
 - Provenance check (execution-log invariant above).
 - `causal_verb_scan.py` on the report draft.
 - Repeatability + robustness per matrix.
 - **Analyst–inspector = an adversarial-verify invocation** with packet type
   "reproduce-from-plan": the packet is the pre-registered plan + execution log; the
-  verifier reproduces the workflow and diffs conclusions. (No duplicated machinery —
+  verifier reproduces the workflow and diffs conclusions. (No duplicated machinery -
   adversarial-review finding 8.) Division of labor: inspector = reproduction fidelity;
   the closing adversarial-verify run = claim audit.
 - Feedback discipline: on critique, re-verify against data before changing any answer.
 
-**Phase 5 — Communication.** Route through installed skills (insight-synthesis,
+**Phase 5 - Communication.** Route through installed skills (insight-synthesis,
 executive-summary-generator, visualization-builder). Every estimate ships with an
 interval; evidence-strength tags; uncertainty survives the executive summary (no
 de-hedging); limitations include the tier disclosure.
@@ -208,7 +208,7 @@ leakage bait, baseline bait). Two-stage scoring: binary viability gate + 0–5 r
 dimension, scored by an **LLM judge whose prompt ships with the benchmark** (judge bias
 is a stated threat; judge prompt is part of the deliverable). ≥3 replicates per arm.
 Report Cohen's d on the with/without delta; **pass^k for the gates** (they are
-verifiers); report cost (tokens/turns — rigor isn't free); the report separates the
+verifiers); report cost (tokens/turns - rigor isn't free); the report separates the
 viability-gate pass rate from graded quality (averaging hides gate gaps). Keep the
 no-skill baseline in every run as the obsolescence signal. Fixtures double as
 writing-skills RED-phase pressure tests. Shared eval rules:
@@ -216,7 +216,7 @@ writing-skills RED-phase pressure tests. Shared eval rules:
 
 ## Testing plan
 
-RED baseline (no skill) on fixtures — expected failures per evidence base: test named
+RED baseline (no skill) on fixtures - expected failures per evidence base: test named
 before assumptions checked, fan-out join unnoticed, aggregate reported without strata,
 every scanned pattern reported as a finding, no intervals, non-runnable notebook.
 GREEN: gates catch each seeded trap. REFACTOR: log rationalizations, counter in gates/.

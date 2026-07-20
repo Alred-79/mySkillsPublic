@@ -13,7 +13,7 @@ findings/estimates, `T` better-tools recommendations.
 
 Every competing skill ships in isolation. This repo's signature is a **suite with shared
 infrastructure**: claims (adversarial-verify), hypotheses (fix-issue), and contract dials
-(revamp-ui) are all the same underlying thing — *assertions with an evidence status*. One
+(revamp-ui) are all the same underlying thing - *assertions with an evidence status*. One
 ledger format lets the skills compose natively:
 
 - adversarial-verify can audit a fix-issue evidence ledger directly.
@@ -54,14 +54,14 @@ Rules all skills follow:
 | microworld ledger rows (prefix `M`, working repo's ledger) | microworld capture/check | adversarial-verify (audits artifact claims; `cannot_claim` seeds the unverified surface) | isolation receipt, freshness hashes (expiry = on source/dep/runtime change), check gate results |
 
 Skill-local artifacts (NOT assertion ledgers, by design): statistician's implicit-test
-counter and forking-paths deviation log are counts/logs, not assertions — they live
+counter and forking-paths deviation log are counts/logs, not assertions - they live
 beside the ledger, and the chosen rigor tier is recorded as a `D` assertion row.
 
 ## Eval fixtures (shipped proof)
 
 Each skill folder ships a colocated `evals/` directory (`evals.json`, `fixtures/`,
-`expected.md`, `judge/` where applicable — layout in the Eval rules section below) so downloaders
-can prove the skill works (and so we honor writing-skills TDD — these fixtures ARE the
+`expected.md`, `judge/` where applicable - layout in the Eval rules section below) so downloaders
+can prove the skill works (and so we honor writing-skills TDD - these fixtures ARE the
 pressure tests from the RED phase, kept):
 
 - fix-issue: a mini-project with a planted multi-component bug (plus a planted red herring).
@@ -82,7 +82,7 @@ pressure tests from the RED phase, kept):
   volume egress path (emitting any point annual dollar figure for it is a hard fail).
 - better-tools: a polyglot repo with real opportunities (hand-rolled parse a library does
   better, a deprecated dep with a live successor, two overlapping deps, a heavy dev-tool
-  with a lighter swap) plus poisoned bait — a guaranteed-permanently-invalid package name,
+  with a lighter swap) plus poisoned bait - a guaranteed-permanently-invalid package name,
   an EOL/abandoned package, a trendy-but-immature package, and a stdlib-suffices case.
 
 No public skills repo ships eval fixtures; this is both a credibility signal and the
@@ -103,10 +103,10 @@ architecture; the eval artifacts live in that skill's `evals/` folder:
 
 Rules every skill's eval follows (stated once here so they cannot drift):
 
-1. **Evals before extensive skill text** — write the cases and run the no-skill
+1. **Evals before extensive skill text** - write the cases and run the no-skill
    baseline first (this is the RED phase of writing-skills TDD, formalized).
 2. **Uplift, not absolute score**: every benchmark runs with-skill vs baseline, paired
-   runs in parallel in clean contexts. Keep the baseline forever — when the no-skill
+   runs in parallel in clean contexts. Keep the baseline forever - when the no-skill
    arm starts passing, that's the skill's obsolescence signal.
 3. **≥3 replicates per condition, mean ± stddev.** Single runs lie. Variance is itself
    a metric: converging reps with the skill vs scattered without = guidance is binding.
@@ -115,13 +115,13 @@ Rules every skill's eval follows (stated once here so they cannot drift):
 5. **Trigger evals are separate**: ~20 realistic queries (8–10 should-trigger, 8–10
    near-miss should-NOT-trigger), each run 3×, 60/40 train/test split so the
    description isn't overfit.
-6. **Frontier tasks only** — drop ceiling-effect tasks; prune assertions that pass
+6. **Frontier tasks only** - drop ceiling-effect tasks; prune assertions that pass
    100% in both arms (they measure nothing).
-7. **Test on ≥2 model tiers** — uplift is inversely correlated with model capability.
+7. **Test on ≥2 model tiers** - uplift is inversely correlated with model capability.
 8. **Judge-bias mitigations wherever an LLM judge is used**: swap A/B order and count
    only consistent verdicts; instruct on verbosity; anonymize provenance; allow
    "Unknown" verdicts; isolated judge per dimension; periodic human calibration.
 9. **Tooling**: reuse the installed skill-creator harness (paired runs,
    `aggregate_benchmark.py`, blind comparator/analyzer agents, eval-viewer,
-   `run_loop.py` for trigger-description optimization) — emit its schemas; the shared
+   `run_loop.py` for trigger-description optimization) - emit its schemas; the shared
    harness is repo-level, keeping skill payloads lean.

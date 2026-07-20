@@ -32,3 +32,7 @@ Every skill follows a shared discipline, documented in [docs/specs/](docs/specs/
 ## CLAUDE.md
 
 [CLAUDE.md](CLAUDE.md) holds the authoring conventions these skills follow (writing style, planning with tradeoffs, asking clarifying questions when confidence is low).
+
+## License
+
+[MIT](LICENSE). Use, modify, and redistribute freely.

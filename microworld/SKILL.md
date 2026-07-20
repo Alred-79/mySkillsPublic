@@ -23,7 +23,7 @@ If the environment cannot capture a real trace for something (a code path that d
 
 v1 ships the **validated workflow, the hardened protocol, and a proven reference implementation** - not a one-command runtime binary. Concretely:
 
-- **You build the per-project capture adapter yourself**, following `references/protocol.md`, exactly as the reference implementation in this repo's `examples/` did for a real Werkzeug commit. There is no general `capture` binary that works on an arbitrary repo unseen; the adapter is short, per-world, and always requires human review (see the security boundary below). `references/reference-implementation.md` walks the worked example as a template.
+- **You build the per-project capture adapter yourself**, following `references/protocol.md`, exactly as the described reference implementation did for a real Werkzeug commit. There is no general `capture` binary that works on an arbitrary repo unseen; the adapter is short, per-world, and always requires human review (see the security boundary below). `references/reference-implementation.md` describes the worked example inline as a self-contained template - the adapter shape, the capture-validate-build flow, and the trust gates - so you can imitate it from that file alone.
 - **A packaged general capture/build/check runtime and OS-sandbox receipts are the documented hardening layer, not a bundled artifact.** The protocol specifies them (schema v2, the sandbox-exec receipt, the `verify` gate); the reference implementation records honestly where it stops short (its receipts say `isolation: NONE - prototype`). Do not claim a runtime you did not build.
 - **Constraints:** Python-only. Single-process (no distributed causality). macOS-only for the sandbox-exec receipt (Linux bwrap/landlock is future work; sandbox-exec is Apple-deprecated, a risk accepted for v1). The user-facing report always lists which checks passed and what the world omits.
 
@@ -39,7 +39,7 @@ Four phases. Phase 0 picks the world. Phase 1 captures and validates real traces
 
 One world answers **one causal question**. Given a bare code path, help the user choose one where (a) recent AI-written changes landed, (b) the behavior likely violates a reasonable prior, and (c) the causal story fits a small closed world (bytes in, observable states out). The best worlds are "identical output, different mechanism" diffs: the tests say refactor, the runtime behavior changed. Surprise is the design target - author the world around the code path's most expectation-violating behavior, because an uninformed guess produces no learning but a *violated* confident prediction produces a lot.
 
-Write the **world contract** before capturing (the reference's `world-definition.md` is the template):
+Write the **world contract** before capturing (the world-definition skeleton in `references/reference-implementation.md` is the template):
 
 - `causal_question` - the single "why does X happen?" answerable by tracing this implementation.
 - `included_state` - the keys the artifact will expose (states, events, final values, exceptions) and the input axes the learner can vary.
@@ -53,7 +53,7 @@ Pick the **four scenario roles**: `baseline` (the reference run), `counterfactua
 
 ### Phase 1 - Write a fixed adapter, capture real runtime events, validate
 
-Write an adapter that **imports the REAL implementation** and drives it against the scenarios, emitting the observed-runtime events named in `included_state`. The reference `adapter.py` is the pattern:
+Write an adapter that **imports the REAL implementation** and drives it against the scenarios, emitting the observed-runtime events named in `included_state`. The adapter shape (a `run_scenario(scenario, emit)` function) in `references/reference-implementation.md` is the pattern:
 
 - **Import the real code unmodified.** For a commit, use two git worktrees (before/after the SHA) and inject `<worktree>/src` onto `sys.path`. Assert `git rev-parse HEAD` equals the expected SHA before capturing. Never edit the source or monkeypatch the algorithm.
 - **Instrument at the seam, not the algorithm.** Wrap the public methods in a subclass whose overrides call `super()` so the real methods run; record what you observe (buffer sizes, event types, executed lines via a `sys.settrace` tracer scoped to the target file). Executed-line evidence proves a line ran within the declared symbol span; it is not proof the emission was temporally tied to that exact line. Record every value as observed at runtime.
@@ -105,4 +105,4 @@ Chain `adversarial-verify` on the `M` ledger as a closer: it audits the artifact
 
 - `references/protocol.md` - the hardened capture/validation protocol: schema v2, every check gate, epistemics, the sandbox-exec receipt, and the canonicalization policy. Read it when writing the adapter and running the gates. Supersedes any older draft.
 - `references/pedagogy.md` - the learning-loop design rules and the evidence behind each step. Read it before building the artifact.
-- `references/reference-implementation.md` - how to read this repo's `examples/` as a complete worked template (capture -> validate -> playable artifact) built from a real Werkzeug commit.
+- `references/reference-implementation.md` - a self-contained described worked template (world contract, adapter shape, capture -> validate -> build flow, trust gates) grounded in a real Werkzeug commit. Read it to learn the pattern from one page; imitate the inline structures rather than opening any external example.

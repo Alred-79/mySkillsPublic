@@ -40,12 +40,12 @@ The scripts in `scripts/` exist because the LLM cannot rationalize a number a sc
 
 | Script | Phase | Ruling it makes |
 |---|---|---|
-| `assumption_gate.py` | 3 | Normality (Shapiro / Anderson), variance homogeneity (Levene), autocorrelation (Durbin-Watson given a time order), duplicate-key detection - then routes parametric / nonparametric / bootstrap. |
-| `join_audit.py` | 1 | Pre/post row counts, key uniqueness each side, dtype match, grain assertion (`pandas validate=`). Catches fan-out. |
-| `multiplicity_audit.py` | 2 | Reads the test-counter log, applies Benjamini-Hochberg FDR, reports which "findings" survive. |
-| `provenance_table.py` | 4 | Builds statistic -> value -> log-line table from `execution.log`; greps the report for numeric tokens lacking an id. |
-| `bayes_diagnostics.py` | 3 | ArviZ R-hat / ESS / divergences / LOO verdicts for the vendored Bayesian path. |
-| `causal_verb_scan.py` | 4 | Greps a draft for causal verbs lacking a declared identification strategy. |
+| `scripts/assumption_gate.py` | 3 | Normality (Shapiro / Anderson), variance homogeneity (Levene), autocorrelation (Durbin-Watson given a time order), duplicate-key detection - then routes parametric / nonparametric / bootstrap. |
+| `scripts/join_audit.py` | 1 | Pre/post row counts, key uniqueness each side, dtype match, grain assertion (`pandas validate=`). Catches fan-out. |
+| `scripts/multiplicity_audit.py` | 2 | Reads the test-counter log, applies Benjamini-Hochberg FDR, reports which "findings" survive. |
+| `scripts/provenance_table.py` | 4 | Builds statistic -> value -> log-line table from `execution.log`; greps the report for numeric tokens lacking an id. |
+| `scripts/bayes_diagnostics.py` | 3 | ArviZ R-hat / ESS / divergences / LOO verdicts for the vendored Bayesian path. |
+| `scripts/causal_verb_scan.py` | 4 | Greps a draft for causal verbs lacking a declared identification strategy. |
 
 Each script fails gracefully: if a dependency is missing it prints exactly what to `pip install` rather than faking a verdict. Dependencies are listed in `scripts/requirements.txt`. `join_audit.py`, `multiplicity_audit.py`, `provenance_table.py`, and `causal_verb_scan.py` need only numpy/pandas (or the stdlib) and run today; `assumption_gate.py` needs scipy/statsmodels; `bayes_diagnostics.py` needs arviz.
 
