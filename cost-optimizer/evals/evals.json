@@ -1,0 +1,61 @@
+{
+  "skill_name": "cost-optimizer",
+  "notes": "Fixture shopfeed (evals/fixtures/shopfeed) is a polyglot commerce/enrichment app seeded with tier-1/2/3 cost violations plus clean decoys, three reliability-critical decoys that must NOT be cut, and a no-derivable-volume egress path (any point annual dollar figure for it is a HARD FAIL). Fixture hobby-notes (evals/fixtures/hobby-notes) tests hobby-tier scope restraint. Per-violation ground truth and the full rationale live in evals/expected.md; assertions here are keyed to the C-checks (C1..C11). Score recall on seeded violations and false-positive rate on decoys, plus the estimate-provenance gate (every dollar figure needs a dated Class-A rate cite + a volume-assumption id; no bare point figure for the no-derivable-volume path), with a no-skill baseline arm (>=3 reps, >=2 model tiers) per evidence-protocol.md.",
+  "evals": [
+    {
+      "id": 1,
+      "name": "why-is-shopfeed-so-expensive",
+      "prompt": "Our shopfeed bill keeps climbing and I can't tell where the money is going. It's a product-feed enrichment + order service on AWS with an LLM enrichment step, a support agent, Postgres, BigQuery, and an observability stack. Can you read the code in ./shopfeed and find the cost waste, fix what's safe to fix, and estimate what we'd save? This is a real production spend, treat it as material.",
+      "files": ["fixtures/shopfeed"],
+      "expected_output": "Phase 0 infers the 'high-spend' tier (material production bill) and inventories the four cost surfaces. Phase 1 flags the seeded violations by their C-check (unbounded support-agent loop C1, jitterless charge retry C2, NAT egress without VPC endpoint C3, caching-off enrichment prompt C4, Opus-on-trivial-enrichment C5, over-provisioned latency-bound order Lambda C6, missing S3 lifecycle C7, SELECT*/no-partition warehouse scan C8, N+1 item lookup C9, verbose hot-path order logging C10) and applies list-vs-effective framing (C11) to the estimates. It does NOT cut the jittered FX retry, the bandwidth-bound bulk_exporter memory, or the settlement audit log. It does NOT flag the clean decoys. Every dollar figure carries a dated Class-A rate cite + a volume-assumption id; the no-derivable-volume partner-egress path is reported per-unit/ranged with NO point annual figure. Findings are C rows with risk; reliability-touching fixes carry a blast-radius note; adversarial-verify is chained.",
+      "assertions": [
+        { "text": "C1 caught: flags the support-agent ReAct loop in agent/support_agent.py as lacking both a max-iteration cap and a halting per-run token/cost ceiling, and prices the runaway risk off the model rate (not off the $6,531 anecdote)", "passed": null, "evidence": "" },
+        { "text": "C2 caught: flags the jitterless, budgetless, uncapped retry() in api/handler.js used for the charge, and prices the retry-storm amplification (not just 'add jitter')", "passed": null, "evidence": "" },
+        { "text": "C3 caught: flags private-subnet S3/DynamoDB/ECR/Logs traffic routed through the NAT gateway in infra/main.tf with no VPC gateway/interface endpoint, and prices it off the NAT $/GB data-processing rate", "passed": null, "evidence": "" },
+        { "text": "C4 caught: flags the large static ENRICHMENT_SYSTEM prefix re-sent per call in agent/enrich.py with no cache_control, and quotes the cache-read discount", "passed": null, "evidence": "" },
+        { "text": "C5 caught: flags Opus hardcoded on the mechanical per-item enrichment in agent/enrich.py with no routing/cascade, and shows the per-tier price delta (without fabricating the arXiv code-review figure)", "passed": null, "evidence": "" },
+        { "text": "C6 caught: flags the 3008 MB order_handler as over-provisioned for a latency-bound function (blocked on Postgres/FX/payments), keyed on downstream-wait not I/O", "passed": null, "evidence": "" },
+        { "text": "C7 caught: flags the shopfeed-exports bucket lacking AbortIncompleteMultipartUpload + tiering, and explains orphaned multipart parts bill invisibly", "passed": null, "evidence": "" },
+        { "text": "C8 caught: flags the SELECT* / no-partition-filter scan in warehouse/usage_rollup.sql and prices it at BigQuery $6.25/TiB (states the TiB unit, not TB), dated", "passed": null, "evidence": "" },
+        { "text": "C9 caught: flags the N+1 per-item SELECT loop in db.js getOrderItems and prescribes a batched IN/ANY query (the near-zero-recall delta)", "passed": null, "evidence": "" },
+        { "text": "C10 caught: flags the full-body ORDER_DEBUG per-request log in api/handler.js as hot-path ingestion cost, and distinguishes it from the settlement audit log", "passed": null, "evidence": "" },
+        { "text": "C11 applied: savings are stated in effective (post-discount/amortized) terms, and any commitment recommendation targets the ~70-80% coverage band, not 100% on-demand list", "passed": null, "evidence": "" },
+        { "text": "provenance gate: every dollar figure in the report carries an inline dated Class-A rate cite AND a volume-assumption id; no bare point figure lacking both", "passed": null, "evidence": "" },
+        { "text": "HARD FAIL guard: the partner-egress path (infra/main.tf aws_route.partner_egress) is reported as a per-unit or ranged cost; NO point annual dollar figure is emitted for it", "passed": null, "evidence": "" },
+        { "text": "must-not-cut respected: the jittered/budgeted retryWithJitter (FX retry) is NOT removed or weakened", "passed": null, "evidence": "" },
+        { "text": "must-not-cut respected: the 3008 MB bulk_exporter memory (bandwidth-bound S3 transfer) is NOT trimmed; C6 does not fire on it", "passed": null, "evidence": "" },
+        { "text": "must-not-cut respected: the settlement audit log in db.js is NOT cut as log-volume waste (it is the sole audit trail)", "passed": null, "evidence": "" },
+        { "text": "decoys respected: does NOT flag the input validation, the logs_archive bucket lifecycle, or the well-scoped warehouse query as problems", "passed": null, "evidence": "" },
+        { "text": "three questions: answers in writing what scales super-linearly (a), the likely largest line item (b), and which optimization trades reliability for a small saving (c)", "passed": null, "evidence": "" }
+      ]
+    },
+    {
+      "id": 2,
+      "name": "cut-our-llm-and-aws-bill-targeted",
+      "prompt": "Two things are killing us: our OpenAI-style LLM bill on the enrichment step and something in AWS data transfer. shopfeed is in ./shopfeed. Can you make it cheaper? Focus on the LLM spend and the transfer/egress cost.",
+      "files": ["fixtures/shopfeed"],
+      "expected_output": "Connects the LLM-bill complaint to the caching-off static prompt (C4), the frontier-model-on-trivial-calls (C5), and the unbounded support agent (C1); connects the AWS transfer complaint to the NAT egress without a VPC endpoint (C3). Broadens into the full cost audit rather than fixing only the two named surfaces (still surfaces at least the warehouse scan C8 and the N+1 C9 as further spend), prices findings off dated Class-A rates with volume assumptions, and reports the no-derivable-volume partner-egress path per-unit/ranged. Does not delete the legitimate jittered FX retry while auditing retries.",
+      "assertions": [
+        { "text": "explains the LLM bill via caching-off prompt (C4), model over-selection (C5), and the unbounded agent loop (C1), located at their specific loci", "passed": null, "evidence": "" },
+        { "text": "explains the AWS transfer cost via NAT egress without a VPC gateway/interface endpoint (C3)", "passed": null, "evidence": "" },
+        { "text": "does not stop at the two named surfaces: also surfaces at least the warehouse full-scan (C8) and the N+1 (C9)", "passed": null, "evidence": "" },
+        { "text": "every quoted dollar figure carries a dated Class-A rate cite and a volume-assumption id; BigQuery is quoted per TiB", "passed": null, "evidence": "" },
+        { "text": "HARD FAIL guard: no point annual dollar figure for the no-derivable-volume partner-egress path (per-unit/ranged only)", "passed": null, "evidence": "" },
+        { "text": "self-safety: treats the retry/log/memory changes as reliability-touching and does not cut the jittered FX retry, the audit log, or the bandwidth-bound exporter memory", "passed": null, "evidence": "" }
+      ]
+    },
+    {
+      "id": 3,
+      "name": "hobby-tier-scope-restraint",
+      "prompt": "I built a little notes summarizer in Python that calls the Anthropic API, just for me on my laptop. Someone told me to 'optimize the cost' before I use it more. Can you find what's costing me anything? It's in ./notes-summarizer.",
+      "files": ["fixtures/hobby-notes"],
+      "expected_output": "Phase 0 infers the 'hobby' tier (side project, a few calls a day, no server/cloud/DB). Applies the delta-only rule and tier matrix: flag-only, and per Phase 3 emits NO point dollar totals (per-unit/ranged only). Does NOT invent cloud/warehouse/egress/commitment findings for infrastructure the project does not have (no NAT, no S3 lifecycle, no serverless right-sizing, no Reserved-Instance/commitment math, no warehouse scan). At most notes the tiny static-prefix-caching angle in passing and what would change if it ever scaled.",
+      "assertions": [
+        { "text": "infers hobby tier and says so", "passed": null, "evidence": "" },
+        { "text": "emits NO point annual dollar total (per-unit or ranged only, per the hobby-tier Phase 3 rule)", "passed": null, "evidence": "" },
+        { "text": "does NOT invent findings for absent infrastructure: no NAT/egress, no S3 lifecycle, no serverless memory right-sizing, no commitment/Reserved-Instance math, no warehouse scan", "passed": null, "evidence": "" },
+        { "text": "scopes to flag-only / the handful of checks the matrix runs at hobby tier, rather than the full high-spend battery", "passed": null, "evidence": "" }
+      ]
+    }
+  ]
+}

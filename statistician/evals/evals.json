@@ -1,0 +1,45 @@
+{
+  "skill_name": "statistician",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "We ran a pricing experiment and I need to know if variant B actually beat control before we roll it out to everyone next week - this is going to the exec team. The per-order data is in evals/fixtures/orders.csv (order_id, customer_id, revenue) and I want revenue broken down by region, which is in evals/fixtures/customers_regions.csv. Can you join those, compare the groups, and tell me if the difference is real? Please be rigorous, we're betting real money on this.",
+      "expected_output": "The join is audited and the fan-out is caught: customers_regions has duplicate customer_id rows, so a left join inflates revenue from 815 to 1275 and breaks the order_id grain. The analysis does not report the inflated number. Because stakes are high ('exec team', 'betting real money'), a decision-grade or high-stakes tier is chosen and disclosed. The group comparison uses a test chosen from an assumption check (small n, so nonparametric or bootstrap, not a bare t-test), ships an effect size with a CI, and states the tier's limitations.",
+      "files": ["evals/fixtures/orders.csv", "evals/fixtures/customers_regions.csv"],
+      "expectations": [
+        "Ran a join audit before trusting the merge and caught the fan-out (right key customer_id not unique; rows 8 -> 12; order_id grain broken).",
+        "Did NOT report the join-inflated revenue total (1275) as if it were real; used the true per-order figures (total 815).",
+        "Elicited or inferred a rigor tier from the stated stakes ('exec team', 'betting real money') and stated the tier in the output.",
+        "Chose the group-comparison test FROM an assumption check (normality / variance) rather than naming a t-test up front; small n (12/group) routes to nonparametric or bootstrap.",
+        "Reported an effect size with a confidence (or credible) interval, not just a p-value or a bare mean.",
+        "Stated what the chosen tier did NOT do (the tier disclosure) in the limitations."
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Quick one - I've got a dataset of patients in evals/fixtures/simpsons_recovery.csv with columns severity, treatment (treatment/control), and recovered (0/1). Does the treatment work? Just eyeball it for me, I don't need a huge production analysis.",
+      "expected_output": "Even though the user asked for a quick look, the headline aggregate (control recovers 78% vs treatment 46%) is re-run within the severity strata, which reverses the conclusion: treatment beats control in BOTH the mild (0.95 vs 0.89) and severe (0.36 vs 0.25) strata. This is Simpson's paradox driven by severity confounding. The skill reports the reversal plainly rather than the misleading aggregate, keeps causal language associational (no randomization was described), and labels the finding exploratory per the quick-look tier.",
+      "files": ["evals/fixtures/simpsons_recovery.csv"],
+      "expectations": [
+        "Re-ran the headline finding within the severity strata rather than reporting only the aggregate.",
+        "Detected the Simpson's paradox reversal: treatment loses in aggregate but wins within every severity stratum.",
+        "Reported the reversal as the headline, not the misleading aggregate that treatment is worse.",
+        "Named severity as the confounder driving the reversal.",
+        "Kept causal language associational (no randomization/identification strategy was described in the prompt) and/or labeled the finding exploratory for the quick-look tier."
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "I'm trying to figure out what predicts customer churn so we can build a model. Data is in evals/fixtures/churn_leakage.csv - churned is the label, and there are features like tenure_months, monthly_spend, support_tickets, and days_since_cancellation. I also scanned a bunch of candidate signals earlier and the results are logged in evals/fixtures/multitest_counter.log. Which features actually matter, and can you sanity-check my scan? A couple of the features looked significant.",
+      "expected_output": "The leakage trap is caught: days_since_cancellation is only populated for churned customers (a downstream consequence of the label, not a predictor available at prediction time), so it must be excluded from any model - using it would leak the target. The multi-test scan is corrected: multiplicity_audit.py on the log shows the 2 features that cleared naive p<0.05 do NOT survive Benjamini-Hochberg FDR, so they are not real findings. If any model is fit, split-before-preprocess leakage discipline is applied. The response resists confirming that the 'significant' features matter.",
+      "files": ["evals/fixtures/churn_leakage.csv", "evals/fixtures/multitest_counter.log"],
+      "expectations": [
+        "Identified days_since_cancellation as target leakage (populated only when churned==1; a consequence of the label, unavailable at prediction time) and excluded it from modeling.",
+        "Applied multiplicity correction to the scan (Benjamini-Hochberg / FDR) and reported that the ~2 naively-significant features do NOT survive correction.",
+        "Did NOT endorse the naively-significant features as real drivers just because the user said they 'looked significant' (resisted sycophancy).",
+        "If a model was fit, applied split-before-preprocessing leakage discipline (no fitting-dependent preprocessing on the full dataset).",
+        "Used associational language for feature-outcome relationships absent an identification strategy."
+      ]
+    }
+  ]
+}

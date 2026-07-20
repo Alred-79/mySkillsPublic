@@ -1,0 +1,56 @@
+{
+  "skill_name": "productionize",
+  "notes": "Fixture is evals/fixtures/orders-service, an Express+Postgres orders API seeded with operational blindspot violations plus clean decoys and one reliability-critical retry that must NOT be cut. Per-violation ground truth and the full assertion rationale live in evals/expected.md; assertions here are keyed to the B-checks (B1..B13). Score recall on seeded violations and false-positive rate on decoys, with a no-skill baseline arm (>=3 reps, >=2 model tiers) per evidence-protocol.md.",
+  "evals": [
+    {
+      "id": 1,
+      "name": "launch-readiness-orders-service",
+      "prompt": "We're launching a marketing push next week and expect about 5x normal traffic on our orders-service (Express + Postgres, running on Kubernetes with Istio). Is it production ready? The code is in ./orders-service. Take it to production-grade.",
+      "files": ["fixtures/orders-service"],
+      "expected_output": "Phase 0 infers the 'critical' tier (it takes money) and inventories the stack. Phase 1 flags the seeded violations by their B-check (layered jitterless retry B1, DB-pinging liveness + CPU HPA on an I/O-bound service B3, lockless migration + int32 PK B4, unguarded config parse B5, exit-now SIGTERM B6, missing idempotency on the retried charge B7, dual write B8, oversized pool + no acquisition timeout B9, isolation assumption B10, stale/repurposed flag B12) and answers the three system questions. It does NOT cut the jittered exchange-rate retry and does NOT flag the clean decoys. Findings are P rows with risk; artifacts (runbook/alerts/rollback triggers) trace to sources; adversarial-verify is chained.",
+      "assertions": [
+        { "text": "B1 caught: identifies retries stacking across the mesh (k8s/virtualservice.yaml) AND src/retry.js on the same call path, and flags the missing jitter", "passed": null, "evidence": "" },
+        { "text": "B3 caught: flags the liveness probe pinging the DB in src/health.js as a restart-storm risk", "passed": null, "evidence": "" },
+        { "text": "B3 caught: flags CPU-based autoscaling on this I/O-bound service (scales down under downstream degradation)", "passed": null, "evidence": "" },
+        { "text": "B4 caught: flags migration 002 running blocking DDL with no lock_timeout / no NOT VALID", "passed": null, "evidence": "" },
+        { "text": "B5 caught: flags the unguarded, unvalidated config parse in src/config.js with no last-known-good fallback", "passed": null, "evidence": "" },
+        { "text": "B6 caught: flags the exit-now SIGTERM handler in src/server.js and prescribes fail-readiness-then-drain", "passed": null, "evidence": "" },
+        { "text": "B7 caught: flags the retried charge in src/payment.js as lacking an idempotency key (double-charge risk)", "passed": null, "evidence": "" },
+        { "text": "B8 caught: flags the DB-write-then-publish dual write in src/orders.js and recommends outbox/CDC", "passed": null, "evidence": "" },
+        { "text": "B9 caught: does the arithmetic (pool 200 x 8 replicas vs max_connections 100) and flags the oversized pool + missing acquisition timeout", "passed": null, "evidence": "" },
+        { "text": "B12 caught: flags the stale/repurposed FAST_CHECKOUT flag in src/flags.js", "passed": null, "evidence": "" },
+        { "text": "must-not-cut respected: the jittered, budgeted retryWithJitter / exchange-rate retry is NOT removed or weakened", "passed": null, "evidence": "" },
+        { "text": "decoys respected: does NOT flag the readiness probe, input validation, 404 handler, or the live owned NEW_SETTLEMENT flag as problems", "passed": null, "evidence": "" },
+        { "text": "system questions: answers in writing which reliability automation can itself remove capacity or amplify load (question c)", "passed": null, "evidence": "" },
+        { "text": "production-safety boundary respected: any demonstration targets only ephemeral/local resources, never a production-shaped endpoint", "passed": null, "evidence": "" }
+      ]
+    },
+    {
+      "id": 2,
+      "name": "will-it-survive-real-traffic",
+      "prompt": "Will orders-service survive real traffic? I keep seeing 502s during deploys and I'm worried about what happens when the database has a hiccup. It's in ./orders-service.",
+      "files": ["fixtures/orders-service"],
+      "expected_output": "Connects the reported 502s-on-deploy symptom to the exit-now SIGTERM handler (B6), and the DB-hiccup worry to the DB-pinging liveness probe causing a restart storm (B3). Broadens into the full blindspot audit rather than fixing only the two named symptoms, surfaces the sustaining-loop / cold-start questions (B2), and proposes fixes with self-safety (the probe/shutdown changes are demonstrated, not just asserted).",
+      "assertions": [
+        { "text": "explains the 502s-on-deploy via the exit-now SIGTERM handler (B6)", "passed": null, "evidence": "" },
+        { "text": "explains the DB-hiccup fear via the DB-pinging liveness probe restart storm (B3)", "passed": null, "evidence": "" },
+        { "text": "does not stop at the two named symptoms: also surfaces at least the retry amplification (B1), dual write (B8), and idempotency (B7) findings", "passed": null, "evidence": "" },
+        { "text": "answers what happens at cold start under full load / names the unbounded queue as a sustaining loop (B2)", "passed": null, "evidence": "" },
+        { "text": "self-safety: treats its own probe/shutdown fix as a reliability-mechanism change to be demonstrated, not blindly applied", "passed": null, "evidence": "" }
+      ]
+    },
+    {
+      "id": 3,
+      "name": "hobby-tier-scope-restraint",
+      "prompt": "I built a little URL-shortener side project in Flask with SQLite, just for me and a few friends. Someone told me I should 'productionize' it before I share the link. Can you harden it? It's in ./linkshort.",
+      "files": ["fixtures/linkshort"],
+      "expected_output": "Phase 0 infers the 'experimental' tier (hobby, few users, SQLite). Applies the delta-only rule and tier matrix: flag-only on most checks, no PDB/probe/cert deep-dive, no runbooks/alerts/rollback artifacts. Does NOT over-engineer a hobby app with critical-tier machinery (no Kubernetes probe audits on a single-process Flask app, no cert inventory, no migration lock rehearsal). Focuses on the few things that actually matter at this tier.",
+      "assertions": [
+        { "text": "infers experimental/hobby tier and says so", "passed": null, "evidence": "" },
+        { "text": "does NOT generate runbooks, alert definitions, or rollback-trigger artifacts (matrix: skip at experimental)", "passed": null, "evidence": "" },
+        { "text": "does NOT invent Kubernetes/probe/cert/migration-lock findings that do not apply to a single-process SQLite Flask app", "passed": null, "evidence": "" },
+        { "text": "scopes to flag-only / the handful of checks the matrix runs at experimental, rather than the full critical battery", "passed": null, "evidence": "" }
+      ]
+    }
+  ]
+}

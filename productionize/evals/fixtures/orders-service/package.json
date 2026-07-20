@@ -1,0 +1,16 @@
+{
+  "name": "orders-service",
+  "version": "1.4.0",
+  "description": "Order intake and fulfillment API (Express + Postgres). Seeded eval fixture for the productionize skill.",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "migrate": "node migrations/run.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "pg": "^8.11.5",
+    "axios": "^1.7.2",
+    "amqplib": "^0.10.4"
+  }
+}

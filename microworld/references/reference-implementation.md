@@ -1,0 +1,21 @@
+# The reference implementation: a complete worked microworld
+
+This repo's `examples/` directory is a full, working microworld built end to end from a real commit: **Werkzeug's "Refactor the Multipart parsing into a Sans-IO layer"** (`cbb446fd`, parent `20dae301`). It proves the pattern is buildable and is the template to imitate. When you are unsure how a phase should look in practice, read the corresponding file here rather than inventing from scratch.
+
+The world it builds: as a multipart body streams in chunk by chunk, *when* does the new sans-IO decoder release part bytes, and *why* does a newline-free part release nothing until its closing boundary arrives, even though the old parser streamed it in ~1 KiB pieces? The final form dict and file bytes are identical before and after, so a reviewer skimming tests sees "refactor" while the streaming, memory, and error behavior changed in several surprising ways. That is the ideal microworld target.
+
+## How the files map to the phases
+
+- **Phase 0 - world contract:** `examples/world-definition.md`. The `world`, `contract` (included/omitted state, allowed interventions, `boundary_mocks: none`, invariants, `cannot_claim`), the four scenario roles (S1 baseline, S2 counterfactual, S3 failure, S4/S5 graded transfer), the prediction rubric, the consolidation outline, and the far-transfer open question. Everything in it was recorded from real probe runs; note the discipline that no value is fabricated. Copy this structure for a new world.
+- **Phase 0 - probe:** `examples/probe_multipart.py`. The tiny script that established ground truth by running the real code before any adapter existed. Do this first for a new world; the probed outputs are what the capture must later reproduce.
+- **Phase 1 - adapter:** `examples/adapter.py`. Imports the real Werkzeug from two git worktrees (SHA-asserted), instruments the decoder by subclassing and calling `super()` so the real methods run unmodified, traces executed lines with `sys.settrace` scoped to `multipart.py`, runs before/after in separate subprocesses, captures twice, canonicalizes, diffs, and verifies against the probed ground truth. Its `capture`, `capture-authorship`, and `build` modes are the shape of the runtime you assemble per world.
+- **Phase 1 - executed-line augmentation:** `examples/augment_executed_lines.py`. Re-runs the real decoder under the tracer to attach per-frame executed source lines, interns the distinct line sets (a handful covered ~5648 frames), embeds verbatim symbol source with a matching file hash, and asserts determinism across two passes before writing. This is how "the artifact shows real code" is made true and checkable.
+- **Phase 1 - capture output and receipts:** `examples/capture/`. `capture.json` and `authorship.json` hold the validated traces; `run1/run2` and `authorship_run1/run2` are the double-capture halves; `receipts.json` and `authorship_receipts.json` record the environment, SHAs, source hashes, the double-run-identical flag, and the ground-truth checks.
+- **Phase 2 - artifact:** `examples/artifact/`. `template.html` is the shell with a `/*__CAPTURE_JSON__*/null` splice marker; `index.html` is the built playable artifact with the capture spliced in. `v1-textbook.html` and `v2-parallel-sandbox.html` are earlier iterations kept as a record of the "textbook, not playthrough" failure mode the final version fixed.
+- **Phase 3 - verification record:** `examples/verification.md`. The record of driving the artifact and confirming the interactions.
+
+## Read the honesty, not just the mechanics
+
+The reference is a **prototype** and says so where it matters, which is exactly the standard to hold. Its receipts record `isolation: NONE - prototype, no sandbox-exec receipt`: it demonstrates capture, determinism, executed-line evidence, and a validated playable artifact, but it does **not** produce the OS-sandbox receipt the hardened protocol specifies. That gap is stated, not hidden.
+
+Take the same posture when you build. The reference proves the workflow and the protocol on real code; the packaged general runtime and the sandbox receipt are the documented hardening layer. Show what you captured, label what you did not, and never present a prototype shortcut as the full guarantee.

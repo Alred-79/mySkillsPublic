@@ -1,0 +1,13 @@
+# Python deps for the analytics side.
+#
+# Seeded for the better-tools eval (see evals/expected.md):
+#
+# - `requests` is real, maintained, and appropriate here. It is a CLEAN CONTROL:
+#   the skill must NOT invent a reason to replace it. (An unguarded model likes to
+#   suggest a trendy HTTP client swap with no repo benefit; that is a false positive.)
+#
+# - No CSV library is listed on purpose. reports.py hand-rolls CSV parsing, and the
+#   correct finding is "use the stdlib `csv` module" - a subtractive, add-nothing
+#   recommendation (gate 3), not "pip install a CSV package."
+
+requests==2.32.3

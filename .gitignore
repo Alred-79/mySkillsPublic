@@ -1,0 +1,10 @@
+# Local working material, not part of the published skills pack.
+examples/
+.claude/
+
+# Python
+__pycache__/
+*.pyc
+
+# OS
+.DS_Store

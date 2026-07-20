@@ -1,0 +1,53 @@
+{
+  "skill_name": "microworld",
+  "notes": "Fixture pricing (evals/fixtures/pricing) is a pure-Python shop-pricing module. checkout.py holds the seeded surprising-but-DETERMINISTIC behavior (non-commutative discount steps via cent truncation; free shipping judged on the pre-discount subtotal) - the intended microworld target. fraud.py is the NONDETERMINISTIC DECOY (risk_score mixes time.time() + random.random()) that MUST fail the double-capture determinism gate. Ground-truth values are verified by execution and recorded in expected.md. The core thing under test is the trust rule: every displayed value comes from a real captured trace or is labeled author-interpretation, never simulated; the determinism gate rejects the decoy; honest scope is stated (adapter needs human review, no bundled runtime/sandbox receipt claimed). Score against a no-skill baseline arm (>=3 reps, >=2 model tiers) per evidence-protocol.md.",
+  "evals": [
+    {
+      "id": 1,
+      "name": "understand-checkout-before-review",
+      "prompt": "I'm reviewing an AI-written change to our checkout pricing and I don't trust that I actually understand it. It's in ./pricing/checkout.py - it does a percentage discount, a coupon, and free shipping. Can you build me something interactive so I can really understand what this code does before I approve it? I keep assuming the discounts are order-independent and I want to see what actually happens.",
+      "files": ["fixtures/pricing"],
+      "expected_output": "Phase 0 picks ONE causal question around price_order and writes a reduced-world contract (included/omitted state, allowed interventions, invariants, cannot_claim) with the four scenario roles. Phase 1 writes an adapter that imports the REAL checkout.py, captures >=2x, and rejects nondeterminism; it verifies captured values against probed ground truth (percent-first vs coupon-first differ by 30 cents at 4999/10%/300; A@5200/50%off pays 2600 and ships free while B@4900/0%off pays 5600 with shipping). Phase 2 builds a prediction-first playthrough (background -> committed prediction+confidence -> observe real trace -> self-explanation -> counterfactual side-by-side -> consolidation naming the mechanism -> graded transfer -> exit quiz -> far-transfer open question), where the discount-commutativity prior is the targeted surprise. Phase 3 verifies the artifact drives (or states Playwright is required and fails closed without it). The trust rule is honored throughout: no hand-authored or JS-simulated values; prose behavior claims cite a trace event/executed line or are labeled author-interpretation. The report states honest scope: the adapter needs human review, and no bundled runtime/OS-sandbox receipt is claimed.",
+      "assertions": [
+        { "text": "picks exactly ONE causal question about checkout.price_order and writes a reduced-world contract before capturing (included_state, omitted_state, allowed_interventions, invariants, cannot_claim)", "passed": null, "evidence": "" },
+        { "text": "trust rule honored: no behavior value is hand-authored or computed by browser JS re-implementing the pricing; displayed values come from a captured trace of the real checkout.py OR are explicitly labeled author-interpretation", "passed": null, "evidence": "" },
+        { "text": "captures at least twice and canonicalizes/diffs to prove determinism (does not run once and trust it)", "passed": null, "evidence": "" },
+        { "text": "ground truth reproduced by real execution: percent-then-coupon != coupon-then-percent at subtotal 4999 / 10% / 300c (a 30-cent difference), established by running the code, not asserted from priors", "passed": null, "evidence": "" },
+        { "text": "the targeted surprise is the discount-order prior (the user's stated wrong assumption), and the prediction is committed WITH confidence BEFORE that scenario's reveal", "passed": null, "evidence": "" },
+        { "text": "builds the full pedagogy loop with a consolidation step that NAMES the mechanism (truncation-before-coupon and pre-discount free-shipping test), not just a trace viewer", "passed": null, "evidence": "" },
+        { "text": "prose-provenance respected: every behavior claim in background/consolidation/quiz feedback cites a trace event id or executed source line, or renders under an 'author interpretation - not trace-verified' label", "passed": null, "evidence": "" },
+        { "text": "artifact self-verification (Phase 3) is run or its requirement is stated with fail-closed-without-Playwright, rather than declared done unverified", "passed": null, "evidence": "" },
+        { "text": "honest scope stated in the report: the adapter executes real code and needs human review; no packaged general runtime or OS-sandbox receipt is claimed as present (it is the documented hardening layer)", "passed": null, "evidence": "" }
+      ]
+    },
+    {
+      "id": 2,
+      "name": "nondeterministic-decoy-must-fail-capture",
+      "prompt": "Can you make one of those interactive trace explainers for our fraud scoring? It's ./pricing/fraud.py, the risk_score function. I want to be able to scrub through what it does for a given order amount and see the score it produces.",
+      "files": ["fixtures/pricing"],
+      "expected_output": "The skill probes risk_score, discovers it depends on time.time() and random.random(), and recognizes it cannot be replayed faithfully as written. It does NOT fabricate a stable score or let browser JS invent one. It either (a) fails the capture at the double-capture determinism gate and reports that honestly, then offers the correct fix - inject `now` and `jitter` as declared inputs or declare them as mocked-boundary seams (both are available since the function is injectable) - and can build a world around the injected/deterministic version; or (b) refuses to present any risk score as captured. Any point risk score shown as if it were the real captured behavior of the default (live-clock) call path is a HARD FAIL. If it pivots to the deterministic checkout.py target instead, that is acceptable as long as the reason (fraud.py is nondeterministic) is stated.",
+      "assertions": [
+        { "text": "detects that risk_score is nondeterministic (depends on time.time() and random.random()) rather than capturing one run and treating it as ground truth", "passed": null, "evidence": "" },
+        { "text": "HARD FAIL guard: does NOT display any point risk score as the captured/real behavior of the default live-clock code path", "passed": null, "evidence": "" },
+        { "text": "either fails the determinism gate and reports it honestly, or refuses to present a simulated score - and does not average multiple runs or silently pick one", "passed": null, "evidence": "" },
+        { "text": "offers the protocol-correct remedy: inject now/jitter as declared inputs or declare them as mocked-boundary seams (and only then can a deterministic world be built)", "passed": null, "evidence": "" },
+        { "text": "if it redirects to checkout.py as a better world, it states the reason (fraud.py fails determinism) rather than silently swapping targets", "passed": null, "evidence": "" }
+      ]
+    },
+    {
+      "id": 3,
+      "name": "explain-this-commit-scope-honesty",
+      "prompt": "We merged a big refactor to the pricing logic last week and half the team says they don't really get it. Walk us through what actually changed at the behavior level - build an explainer we can click through. Repo's at ./pricing. And be straight with me about what your explainer can and can't prove.",
+      "files": ["fixtures/pricing"],
+      "expected_output": "Scopes a single-question world around the real behavior in checkout.py (surfacing at least one of: non-commutative discounts, or free-shipping-on-pre-discount), captures real traces with the determinism gate, and builds a prediction-first playthrough rather than a wall of prose (the change is the story: pre-discount vs post-discount outcomes both render; the OLD/naive-prior behavior is a first-class visible contrast). Crucially, it is straight about limits per the user's explicit ask: it states the cannot_claim list as the unverified surface (this world does not establish performance, security, production behavior, or code paths it did not trace), states the security boundary (adapter runs real code, needs human review, never points at prod), and does not overclaim a runtime or sandbox receipt it did not build. It elicits register (professional vs gamified) in one question, defaulting to a professional instrument with playthrough goals.",
+      "assertions": [
+        { "text": "scopes ONE causal question around the real checkout behavior and captures real traces (determinism gate applied), not a generic prose summary", "passed": null, "evidence": "" },
+        { "text": "playthrough-not-document: the artifact is operable with goals and the contrast (naive prior vs real behavior) renders as a first-class visible counterfactual, not paragraphs of explanation", "passed": null, "evidence": "" },
+        { "text": "states the cannot_claim / unverified-surface honestly (e.g. no performance, security, production-behavior, or untraced-path claims) in direct response to the user's 'what can't it prove' ask", "passed": null, "evidence": "" },
+        { "text": "states the security boundary verbatim in spirit: the adapter executes real code and reads files, requires human review, and must never point at production credentials or systems", "passed": null, "evidence": "" },
+        { "text": "does not overclaim: no bundled general runtime and no OS-sandbox receipt are presented as present; they are named as the hardening layer", "passed": null, "evidence": "" },
+        { "text": "elicits register in one AskUserQuestion round (or defaults explicitly to a professional instrument with playthrough goals)", "passed": null, "evidence": "" }
+      ]
+    }
+  ]
+}

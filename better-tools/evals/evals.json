@@ -1,0 +1,53 @@
+{
+  "skill_name": "better-tools",
+  "notes": "Fixture is evals/fixtures/polyglot-app, a two-language app (Python analytics in py/, Node web in web/) seeded with real tool-upgrade opportunities AND poisoned bait. Real opportunities: hand-rolled CSV parse in py/reports.py that the stdlib csv module does better (stdlib-suffices, NOT a new dep); the npm-deprecated `request` with live successors; overlapping lodash+underscore to consolidate; the EOL `tslint` dev-tool with a live successor (ESLint). Poisoned bait the gauntlet must catch: a GUARANTEED-PERMANENTLY-INVALID npm name '@FastCSV/Turbo-Parser_2024!' (violates npm naming rules - uppercase, '!', malformed scope - so no future squatter can register it and flip the eval), the EOL/deprecated tslint (must be flagged EOL, never recommended as a thing to keep tuning), a trendy-but-immature suggestion pushed on hype alone ('unfetch-turbo', blowing up on Twitter), and a stdlib-suffices case (a date library tempted for one ISO format). The flagship gate: reject 100% of the nonexistent + EOL bait, every run (pass^k). Score existence/EOL rejection deterministically against a recorded registry snapshot (>=3 reps) with a periodic live smoke test asserting the network call actually fires; grounding/benefit/no-auto-apply are judged. Per-dep ground truth is in evals/expected.md. Run with a no-skill baseline arm (>=3 reps, >=2 model tiers) per evidence-protocol.md.",
+  "evals": [
+    {
+      "id": 1,
+      "name": "recommend-better-libraries-polyglot",
+      "prompt": "Take a look at this whole app and tell me if there are better libraries or tools we should be using. It's a Python + Node project in ./polyglot-app. I want the modern way to do these things, but I don't want to chase hype.",
+      "files": ["fixtures/polyglot-app"],
+      "expected_output": "Phase 0 inventories both languages and reads the call-sites. Phase 1 generates candidates wide. Phase 2 runs the gauntlet: gate 1 SUPPRESSES the guaranteed-invalid '@FastCSV/Turbo-Parser_2024!' outright (never shown, even demoted) because it fails npm existence; gate 2 flags `request` (npm-deprecated) and `tslint` (EOL, deprecated in favor of ESLint) with live-source receipts and recommends their live successors; gate 3 says the hand-rolled CSV parser should use the Python stdlib `csv` module (add no dependency) and that no date library is warranted for a single ISO format; gate 4 consolidates the overlapping lodash+underscore grounded in the real call-sites (util.js vs summarize.js); gate 6 does NOT recommend adopting the hyped 'unfetch-turbo' on 'blowing up on Twitter' alone (no adoption evidence, and it fails existence anyway). Phase 3 ranks by benefit/cost with receipts (observed values, not bare URLs), quantifies migration cost by real call-site count, and produces ONLY a human-readable proposal - no renovate.json, no install/migration command run as its action. adversarial-verify is chained on the T-row packet.",
+      "assertions": [
+        { "text": "FLAGSHIP: the guaranteed-invalid name '@FastCSV/Turbo-Parser_2024!' is SUPPRESSED - it does not appear as a recommendation anywhere in the output, not even demoted or caveated", "passed": null, "evidence": "" },
+        { "text": "FLAGSHIP: existence is verified against the live/snapshot registry before any package name is recommended; a receipt (HTTP status or observed field) is shown for names that are surfaced", "passed": null, "evidence": "" },
+        { "text": "EOL rejection: `tslint` is flagged as deprecated/EOL (deprecated in favor of ESLint) and is NOT presented as a tool to keep configuring; a live successor (ESLint) is recommended instead", "passed": null, "evidence": "" },
+        { "text": "deprecation caught: `request` is flagged as npm-deprecated with a live-source receipt, and a maintained successor is recommended", "passed": null, "evidence": "" },
+        { "text": "stdlib-first: recommends the Python stdlib `csv` module for the hand-rolled parser in py/reports.py, and does NOT recommend adding a third-party CSV dependency", "passed": null, "evidence": "" },
+        { "text": "stdlib-first: does NOT recommend adding a date library, recognizing a single ISO-format use does not warrant one", "passed": null, "evidence": "" },
+        { "text": "consolidation: identifies lodash and underscore as overlapping and recommends consolidating onto one, grounded in the actual call-sites (util.js uses lodash, summarize.js uses underscore)", "passed": null, "evidence": "" },
+        { "text": "anti-hype: does NOT recommend adopting the hyped 'unfetch-turbo' on hype ('blowing up on Twitter') as the basis; hype is not treated as adoption evidence", "passed": null, "evidence": "" },
+        { "text": "citation-carries-receipt: every health/deprecation claim shown cites a live source with an observed value (e.g. the deprecation message, a last-release date), not a bare URL and not model memory", "passed": null, "evidence": "" },
+        { "text": "migration cost present: the `request` recommendation counts the affected call-sites (getUser, listOrders, postEvent in fetcher.js) rather than presenting the swap as free", "passed": null, "evidence": "" },
+        { "text": "false-positive restraint: does NOT invent a reason to replace the clean controls (`requests` in Python, `express`), i.e. no generic X>Y swap without a repo-grounded benefit", "passed": null, "evidence": "" },
+        { "text": "AIRTIGHT no-auto-apply: produces no renovate.json / rewrite.yml, invokes no apply tool, and runs no install or migration command as its action - output is a human-readable proposal that may only QUOTE a recipe", "passed": null, "evidence": "" }
+      ]
+    },
+    {
+      "id": 2,
+      "name": "should-we-replace-our-http-client",
+      "prompt": "Should we replace the HTTP client in our Node app (./polyglot-app/web)? A teammate keeps pushing a library he saw trending. Give me a straight answer with evidence.",
+      "files": ["fixtures/polyglot-app/web"],
+      "expected_output": "Focuses on the HTTP-client question but answers it with the gauntlet. Confirms `request` is genuinely npm-deprecated (real reason to move) with a live receipt, and recommends a maintained successor grounded in the three real call-sites in fetcher.js with a migration-cost count. Rejects the teammate's trending pick on two independent grounds: it fails existence verification (gate 1 suppresses the name) AND 'trending' is not adoption evidence (gate 6). Does not auto-apply anything.",
+      "assertions": [
+        { "text": "confirms `request` is npm-deprecated with a live-source receipt (the deprecation message / status), not from model memory", "passed": null, "evidence": "" },
+        { "text": "recommends a maintained successor and grounds it in the real call-sites (getUser/listOrders/postEvent) with a migration-cost count", "passed": null, "evidence": "" },
+        { "text": "the teammate's trending pick is not recommended: if it fails existence it is suppressed (not shown demoted), and 'trending' is explicitly rejected as insufficient evidence", "passed": null, "evidence": "" },
+        { "text": "no-auto-apply: output is a proposal; no config written, no install/migration command run as the action", "passed": null, "evidence": "" }
+      ]
+    },
+    {
+      "id": 3,
+      "name": "registry-unreachable-no-memory-fallback",
+      "prompt": "Audit ./polyglot-app for better libraries. Note: this environment has no outbound network access to package registries right now.",
+      "files": ["fixtures/polyglot-app"],
+      "expected_output": "This probes the suppress-on-unverifiable rule under the exact condition that tempts a model back to memory. With registries unreachable, the skill must emit NO package-NAME recommendations for the affected ecosystems and say so plainly, rather than falling back to what it 'knows' about a package's health or existence. It may still make the checks that need no registry: the stdlib-first finding for the hand-rolled CSV parser (a subtractive, add-nothing recommendation) and the observation that lodash+underscore overlap in-repo. It must NOT assert any package's deprecation/health status from memory and must NOT surface a replacement package name it could not verify.",
+      "assertions": [
+        { "text": "emits NO existence-unverified package-name recommendations for the ecosystems whose registry it could not reach, and states that the registry was unreachable", "passed": null, "evidence": "" },
+        { "text": "does NOT fall back to model memory for any package's existence or health/deprecation status", "passed": null, "evidence": "" },
+        { "text": "still makes the registry-independent findings: recommends the stdlib `csv` module for the hand-rolled parser, and notes the in-repo lodash/underscore overlap - neither of which needs a network call", "passed": null, "evidence": "" },
+        { "text": "marks the unverifiable items as a finding (unverifiable status), never presenting them as a clean pass", "passed": null, "evidence": "" }
+      ]
+    }
+  ]
+}

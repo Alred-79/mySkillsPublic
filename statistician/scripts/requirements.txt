@@ -1,0 +1,24 @@
+# statistician skill - script dependencies
+#
+# The scripts degrade gracefully: each one that needs a package it cannot import prints the
+# exact `pip install` line and exits 2, rather than faking a verdict. So you only need to
+# install what the script you are running actually uses.
+#
+# Runs today on numpy/pandas alone (no stats stack needed):
+#   join_audit.py          -> pandas   (+ pyarrow only for .parquet, openpyxl only for .xlsx)
+#   multiplicity_audit.py  -> numpy
+#   provenance_table.py    -> (standard library only)
+#   causal_verb_scan.py    -> (standard library only)
+#
+# Needs the stats stack:
+#   assumption_gate.py     -> pandas, numpy, scipy, statsmodels
+#   bayes_diagnostics.py   -> arviz   (only on the vendored Bayesian route)
+
+pandas>=1.3
+numpy>=1.20
+scipy>=1.7          # assumption_gate.py: Shapiro / Anderson / Levene
+statsmodels>=0.13   # assumption_gate.py: Durbin-Watson
+arviz>=0.15         # bayes_diagnostics.py: R-hat / ESS / divergences / LOO
+# optional readers for join_audit.py:
+# pyarrow>=8         # .parquet inputs
+# openpyxl>=3        # .xlsx inputs

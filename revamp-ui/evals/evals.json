@@ -1,0 +1,57 @@
+{
+  "skill_name": "revamp-ui",
+  "notes": "This is a creative skill, so evals are NOT golden-output matching. They score three tiers per docs/specs/revamp-ui.md and evidence-protocol.md: (1) constraint floor - binary checks any redesign however divergent should pass (renders, original content/routes/functionality preserved, responsive, contrast, LOCKED elements untouched); (2) intensity-vs-contract - did the delivered design hit the dial the case's brief implies, checked per-section not by average, catching both the timid-hero undershoot and the everything-animates overshoot; (3) diversity/anti-template across repeated reps. Cases 1-3 span a low, a moderate, and a maximal dial so BOTH floors and ceilings are exercised. Run with-skill vs a no-skill baseline arm, >=3 reps, >=2 model tiers. A judge rubric for blind-pairwise screenshot scoring (incl. Creative Distinction) lives in judge/. Fixture slopdash is the before-state; the maximal and calm briefs may target it too, or the tester's own dated page.",
+  "evals": [
+    {
+      "id": 1,
+      "name": "dated-dashboard-make-it-modern",
+      "prompt": "This analytics dashboard looks really dated and generic, like every other AI-generated SaaS page. Make it feel modern and premium. It's a single file at ./slopdash/index.html. Go ahead and just pick the direction, I trust you - but keep all the actual numbers and the filter and the nav working.",
+      "files": ["fixtures/slopdash"],
+      "expected_output": "Phase 0 inventories slopdash and identifies both the seeded slop and the load-bearing content/routes/filter/SEO surface. Because the user said 'go ahead', it infers the dials (a moderate-to-bold master, not maximal, for a dashboard) and states them in a DESIGN-CONTRACT that LOCKS the metrics, the four nav routes, the working filter, and the heading outline. It bans the named slop defaults with concrete alternatives. Delivered redesign renders, preserves every metric value and the working filter and all routes, keeps one h1, passes contrast, and is responsive. The mechanical detector ends with FEWER slop findings than the before-state. Intensity lands in the moderate-bold band the contract set, not timid and not a maximal show. adversarial-verify optionally chained on the D ledger.",
+      "expectations": [
+        "FLOOR: the revamped page renders with no console errors.",
+        "FLOOR: all four stat values (12,480 / $48.2k / 3.1% / 1,204) and all four data-table rows are preserved unchanged.",
+        "FLOOR: the date-range filter still updates the note (working functionality preserved), and the /, /reports, /settings, /help, /signup routes still exist.",
+        "FLOOR: exactly one h1 remains and the heading outline (h1 then h2 'This month') is intact; title and meta description preserved (SEO surface locked).",
+        "FLOOR: responsive at mobile and desktop widths; text contrast passes WCAG AA.",
+        "SLOP: the mechanical detector finds strictly FEWER banned-slop occurrences than the before-state (no default indigo #6366f1 as the theme, no emoji feature icons, no gradient h1 text, real type decision made).",
+        "CONTRACT: a DESIGN-CONTRACT is written with numeric dials, a LOCKED list naming the metrics/routes/filter/SEO surface, and a named banned-slop list with concrete alternatives.",
+        "INFERENCE: because the user delegated ('go ahead'), the dials are inferred and stated explicitly rather than the skill stalling on an interview.",
+        "INTENSITY: delivered spectacle sits in the moderate-to-bold band appropriate for a dashboard (scored against the contract), not left timid/near-identical and not pushed to a maximal animated show."
+      ]
+    },
+    {
+      "id": 2,
+      "name": "maximal-immersive-landing",
+      "prompt": "We're relaunching the marketing site for our synthwave music app and I want the landing page to be an EXPERIENCE - immersive, animated, the kind of site people screenshot and share. Motion everywhere, maybe some 3D depth. Go as bold as you can. The current page is boring and static. Make it a show.",
+      "files": [],
+      "expected_output": "Interview (or, on the bold delegation, inference) sets a high master dial (~9) and high motion (8-10), with 3D at least at the tasteful-accent level. The DESIGN-CONTRACT records the high dials, the perf budget relaxed-but-capped, and a first-class degradation contract (what reduced-motion / no-JS / low-end-mobile users get). Because motion >= 6, a motion storyboard checkpoint is produced before animation code. Build hits the motion-8+ FLOOR from gates.md (orchestrated load AND scroll choreography AND hover physics AND a signature moment) - the key check is that it does NOT ship timid. GSAP/Lenis are permitted at this dial; R3F only appears if 3D was opted in, routed through 3d-web-experience. Phase 5 scores per section and flags any dead/timid section for a 'bolder' correction, while still requiring cross-section variance (not literally everything maxed), reduced-motion fallback, and CWV against budget.",
+      "expectations": [
+        "DIAL: a high master dial and high motion (8-10) are set and recorded in the contract (the brief is explicitly maximal).",
+        "FLOOR (the core check): delivered design meets the motion-8+ floor - orchestrated load, scroll-triggered choreography, hover physics, and a signature motion moment are all present; it is NOT timid/decayed to a safe middle.",
+        "STORYBOARD: because motion >= 6, a motion storyboard (what moves, when, triggered by what, why) is presented before animation code is written.",
+        "DEGRADATION: the contract includes a first-class tiered degradation plan; a prefers-reduced-motion user gets a complete static equivalent, not an empty page.",
+        "LIBRARY GATE: GSAP/Lenis usage is consistent with the >=6 allowlist; R3F is used only if 3D was opted in, and 3D is routed through 3d-web-experience rather than hand-rolled.",
+        "VARIANCE: Phase 5 still requires cross-section variance and readability - it does not bless a literally everything-animates-at-9 page as correct.",
+        "A11Y/CWV: reduced-motion honored, contrast passes, and CWV is checked against the (relaxed but hard-capped) budget.",
+        "HONESTY: if screenshot/Playwright/preview tooling is unavailable, the intensity scoring says it came from structured self-review rather than claiming screenshots."
+      ]
+    },
+    {
+      "id": 3,
+      "name": "calm-quiet-restraint",
+      "prompt": "Our current marketing site is way too much - parallax, things flying in on every scroll, autoplaying background video. It feels exhausting and it's slow. I want the opposite: calm, fast, editorial, almost nothing moving. Like a well-set document. Please redesign it that way.",
+      "files": [],
+      "expected_output": "This is the ceiling-side control: the brief is explicitly calm, so the skill sets a LOW master dial (~2) and low motion (1-3). The DESIGN-CONTRACT records the low dials, the strictest CWV posture, and bans the loud patterns the user complained about. The gates.md CEILING for motion <=3 binds: NO scroll-triggered animation, transitions <=200ms, no parallax, no autoplay, emil frequency matrix strict, and the heavier libraries (GSAP/Lenis) are OFF the allowlist. The value here is restraint: the skill must NOT sneak spectacle back in, and must NOT over-apply the maximal machinery. Phase 5 scores delivered intensity and flags any section that OVERSHOOTS the calm dial for a 'quieter' correction. Quality still holds (deliberate type, real hierarchy) - calm is not the same as bland.",
+      "expectations": [
+        "DIAL: a low master dial and low motion (1-3) are set and recorded in the contract (the brief is explicitly calm).",
+        "CEILING (the core check): no scroll-triggered animation, no parallax, no autoplay; transitions stay <= ~200ms - the motion <=3 ceiling from gates.md is respected.",
+        "LIBRARY GATE: GSAP/Lenis/scroll-hijack libraries are NOT introduced (they are off the allowlist below motion 6); the low-motion end defers to emil-design-eng restraint.",
+        "RESTRAINT: the skill does not reintroduce the loud patterns the user asked to remove, and does not over-engineer maximal machinery onto a calm brief.",
+        "NOT-BLAND: despite the calm dial, a real design decision is made (deliberate type pairing, intentional spacing/hierarchy) - restraint is scored as quality, not as doing nothing.",
+        "OVERSHOOT CORRECTION: Phase 5 flags any section that delivers MORE intensity than the calm contract for a 'quieter' correction (the ceiling direction of intensity scoring).",
+        "PERF: the strict CWV posture is recorded and the result is fast (the user's speed complaint is addressed)."
+      ]
+    }
+  ]
+}

@@ -1,0 +1,56 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: orders-service
+spec:
+  replicas: 8          # 8 instances x pool 200 (src/db.js) = 1600 conns vs max_connections 100 (B9)
+  selector:
+    matchLabels:
+      app: orders-service
+  template:
+    metadata:
+      labels:
+        app: orders-service
+    spec:
+      containers:
+        - name: orders
+          image: orders-service:1.4.0
+          ports:
+            - containerPort: 3000
+          # liveness hits /healthz, which pings the DB (B3) -> DB blip restarts the fleet
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 3000
+            periodSeconds: 5
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: 3000
+            periodSeconds: 5
+          # NOTE (B6): no preStop hook and the app exits immediately on SIGTERM, so there
+          # is no drain window; every rollout 502s.
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: orders-service
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: orders-service
+  minReplicas: 8
+  maxReplicas: 40
+  metrics:
+    # VIOLATION (B3): this service is I/O-bound (it mostly waits on Postgres, payments,
+    # fx, email). Scaling on CPU means that when a downstream degrades, the pods block on
+    # I/O, CPU DROPS, and the HPA scales DOWN, removing capacity exactly when load is
+    # highest. An I/O-bound service should scale on a saturation signal (in-flight
+    # requests, queue depth), not CPU.
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70

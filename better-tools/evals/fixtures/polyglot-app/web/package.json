@@ -1,0 +1,23 @@
+{
+  "name": "polyglot-app-web",
+  "version": "0.4.0",
+  "private": true,
+  "description": "Web side of the better-tools eval fixture. Deps are seeded; see evals/expected.md for the per-dep ground truth.",
+  "scripts": {
+    "build": "webpack --mode production",
+    "test": "mocha 'src/**/*.test.js'",
+    "lint": "tslint -p tsconfig.json"
+  },
+  "dependencies": {
+    "request": "^2.88.2",
+    "lodash": "^4.17.21",
+    "underscore": "^1.13.6",
+    "express": "^4.19.2"
+  },
+  "devDependencies": {
+    "webpack": "^5.91.0",
+    "webpack-cli": "^5.1.4",
+    "mocha": "^10.4.0",
+    "tslint": "^6.1.3"
+  }
+}

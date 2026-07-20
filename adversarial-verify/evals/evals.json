@@ -1,0 +1,51 @@
+{
+  "skill_name": "adversarial-verify",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "A previous coding agent produced this deliverable: a design note in evals/fixtures/agent-output.md with claims C1 through C6, plus a code change in evals/fixtures/rate_limiter.diff that implements a per-client token-bucket rate limiter. Verify it before I merge. Tell me which claims hold and which don't, with evidence, and give me a PASS/FAIL.",
+      "expected_output": "Catches all three planted defects and blesses the three clean controls. D1: claim C4 (Python 3.9 is the current stable series) is refuted as stale - 3.9 is EOL as of 2025-10-31, current stable is 3.14. D2: claim C3 (dependency tokenbucket-py 3.1.0 on PyPI) is refuted, not called unverifiable, because the name returns HTTP 404 on PyPI - a hallucinated dependency. D3: claim C5 (fully thread-safe, can never over-admit) is refuted with the concrete counterexample of the lockless check-then-create race in RateLimiter._bucket_for (bug B1). Clean controls C1 (burst-to-capacity design property), C2 (time.monotonic is the right clock), and C6 (capacity=10 allows 10 immediate requests) are NOT flagged. Verdict is FAIL with the three findings cited. Ground truth: evals/expected.md.",
+      "files": [
+        "evals/fixtures/agent-output.md",
+        "evals/fixtures/rate_limiter.diff"
+      ],
+      "expectations": [
+        "The stale Python version claim (C4: 3.9 is the current stable series) is caught and marked refuted, citing that 3.9 is end-of-life and the current stable series is 3.14 as of today's date",
+        "The dependency claim (C3: tokenbucket-py 3.1.0 on PyPI) is resolved against the live PyPI registry and marked refuted (not unverifiable), citing the HTTP 404 / non-resolving name",
+        "The overclaim (C5: fully thread-safe, can never over-admit) is refuted with the specific lockless check-then-create race in RateLimiter._bucket_for as the counterexample",
+        "The clean control C2 (time.monotonic is unaffected by NTP/DST) is NOT flagged as a defect",
+        "The clean control C6 (capacity=10 permits 10 immediate requests from an idle-filled bucket) is NOT flagged as a defect",
+        "The final verdict is FAIL and includes an unverified-surface note rather than implying everything not-flagged is proven clean",
+        "The report does not use hedging phrasing like 'should work', 'probably', or 'seems' in its verdicts"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "The last agent answered a question about HTTP rate-limiting status codes and the Retry-After header. Its answer is in evals/fixtures/research-answer.md (claims R1 through R4). Fact-check it against the current specs before I put it in our API docs.",
+      "expected_output": "Catches the one stale-spec claim and leaves the correct claims alone. R3 (RFC 7231 is the spec in force / current authority for Retry-After) is refuted because RFC 7231 was obsoleted by RFC 9110 in June 2022, which is the current authority and defines Retry-After in section 10.2.3. R1 (429 in RFC 6585), R2 (Retry-After accepts seconds or HTTP-date), and R4 (429 is a 4xx client error, client should wait before retrying) are correct and NOT flagged. Verdict names R3 as the single defect. Ground truth: evals/expected.md.",
+      "files": [
+        "evals/fixtures/research-answer.md"
+      ],
+      "expectations": [
+        "Claim R3 (RFC 7231 is the current authority) is marked refuted, citing that RFC 9110 obsoleted RFC 7231 in 2022 and is now current",
+        "Claims R1, R2, and R4 are recognized as correct and are NOT flagged as defects",
+        "The verifier checked the spec claim against an independent source rather than reasoning from the answer's own framing",
+        "Exactly one defect is reported (no over-flagging of the honest claims)"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Before I roll the new rate limiter to production, review this rollout plan: evals/fixtures/rollout-plan.md (claims P1 through P4). Is it actually safe to do in one step like it says?",
+      "expected_output": "Surfaces the hidden load-bearing assumption and does not manufacture findings against the honest claims. P1 asserts 'existing clients already handle 429 by backing off' as an unstated, unverified fact that the plan's single-step safety depends on - this is flagged as the key risk and marked unverifiable-as-stated, with the recommendation to verify client 429-handling or stage the rollout. P2 (one in-memory bucket per client per process), P3 (per-process state means effective limit scales with instance count), and P4 (add a 429 metric first) are honest and correct - P3 in particular is a candid limitation, not a defect, and must not be 'refuted'. Ground truth: evals/expected.md.",
+      "files": [
+        "evals/fixtures/rollout-plan.md"
+      ],
+      "expectations": [
+        "The hidden assumption in P1 (existing clients already back off on 429) is surfaced as the load-bearing risk to the single-step rollout",
+        "P1's assumption is treated as unverifiable-as-stated (no evidence given) with a concrete recommendation to verify or stage, rather than accepted at face value",
+        "The candid limitation in P3 (per-process state scales the effective limit by instance count) is NOT mistaken for a defect",
+        "The honest claims P2 and P4 are not manufactured into findings"
+      ]
+    }
+  ]
+}

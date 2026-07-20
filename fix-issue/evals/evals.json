@@ -1,0 +1,49 @@
+{
+  "skill_name": "fix-issue",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Something's wrong with our checkout totals. If a customer opens a brand-new cart and adds a single $4.00 coffee with no discount, they get charged way more than $4.00 - I've seen $9.50. But it only happens after the app has processed some other carts; the very first checkout of the session is fine. The code is in evals/fixtures/checkout/. Please debug this and fix it. Run the tests with pytest.",
+      "expected_output": "Root cause identified as the mutable default argument line_items=[] in cart.py leaking items across Cart instances, which inflates the subtotal that pricing.py then bills. Fix changes the default to None with an inside-the-body allocation. The full pytest suite passes from a clean run, the reproducer test passes, format_money.py is left untouched, and no debug instrumentation is left behind.",
+      "files": ["evals/fixtures/checkout/"],
+      "expectations": [
+        "Reproduced the failure before proposing any fix (ran the suite and saw test_single_coffee_no_discount fail).",
+        "Identified the root cause as the shared mutable default argument in cart.py (line_items=[]), not the currency formatting.",
+        "Did NOT modify format_money.py or claim the formatter was the bug (the planted red herring).",
+        "Named the state leak as the mechanism and connected it across cart.py and pricing.py before patching.",
+        "The applied fix uses a None sentinel (or otherwise gives each Cart its own list) rather than mutating call sites or adding a manual reset.",
+        "After the fix, the FULL pytest suite passes from a clean run and the output was actually read.",
+        "No leftover debug instrumentation (#region DEBUG blocks or stray prints) remains in the fixture.",
+        "A root cause was stated explicitly before the patch was written (not after)."
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "One of our pytest tests is flaky. evals/fixtures/checkout/test_checkout.py::test_single_coffee_no_discount passes when I run it by itself, but fails when I run the whole file. Same code, different result depending on what else runs. Can you figure out why and fix it for good? I don't want a retry or a skip - I want it actually correct.",
+      "expected_output": "Recognized as order-dependent state pollution rather than genuine nondeterminism. Traced the pollution to the mutable default list shared across Cart instances in cart.py and fixed the default. Did not paper over it with retries, reordering, or a fixture-reset hack. Full suite passes from a clean run.",
+      "files": ["evals/fixtures/checkout/"],
+      "expectations": [
+        "Confirmed the order-dependence empirically (test passes alone, fails in the full suite) before theorizing.",
+        "Diagnosed it as shared state across test runs, traced to the mutable default argument in cart.py, not as true randomness.",
+        "Did NOT 'fix' it by adding a retry, a skip, an xfail, or by reordering the tests.",
+        "The applied fix removes the shared-state root cause (None sentinel or explicit per-instance list).",
+        "Did NOT modify format_money.py (the red herring).",
+        "The full pytest suite passes from a clean run afterward and no debug instrumentation is left behind."
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Our order-pricing code is overcharging in some cases and I genuinely can't tell where. Cart subtotal, percent discount, and tax all look individually plausible, and the money formatting is dense so I suspect it's mangling something. It's in evals/fixtures/checkout/. I need to know the actual root cause with evidence, not a guess - please investigate rigorously and then fix it, and confirm the fix actually catches the bug.",
+      "expected_output": "Because multiple components are plausible and the true cause is non-obvious, the skill investigates several competing hypotheses (subtotal/state, discount rounding, tax, formatting) with evidence rather than anchoring, rules out the formatting red herring with a citation, and converges on the mutable-default state leak in cart.py. Applies the fix, then falsifies it (re-breaks the code to confirm the test catches it). Full suite green.",
+      "files": ["evals/fixtures/checkout/"],
+      "expectations": [
+        "Considered more than one candidate cause (e.g. state leak, discount rounding, tax, formatting) instead of committing to the first plausible one.",
+        "Ruled out the format_money.py red herring with actual evidence (e.g. its own passing test or a traced value), not by assertion.",
+        "Converged on the mutable default argument in cart.py as the confirmed root cause, supported by evidence.",
+        "Wrote or confirmed a failing test that fails because of this root cause before applying the fix.",
+        "Falsified the fix: re-broke the code (or reverted the patch) and confirmed the test goes red, then restored it.",
+        "The full pytest suite passes from a clean run afterward, with no leftover debug instrumentation."
+      ]
+    }
+  ]
+}
