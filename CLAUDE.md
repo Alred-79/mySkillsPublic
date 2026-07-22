@@ -9,7 +9,7 @@ Where a project file speaks to a specific project, that file wins on those speci
 - When writing commit messages, NEVER auto-add your agent name as co-author.
 - Never manually modify CHANGELOG.md files or any files marked as auto-generated.
 - When making technical decisions, do not give much weight to development cost. Instead, prefer quality, simplicity, robustness, scalability, and long term maintainability.
-- Avoid overengineering. Build the simplest thing that solves the problem in front of you, and do not add speculative abstraction, extra features, or complexity I did not ask for. If a simpler design does the job, choose it.
+- Avoid overengineering, and stay in scope. Build the simplest thing that solves the problem I actually asked for, do only what I asked, and raise extra work or larger changes you notice as an optional suggestion rather than doing them unasked. Newer models tend to run eager, so this matters more now, not less.
 - When doing bug fixes, always start with reproducing the bug in an E2E setting as closely aligned with how an end user hits it as possible. This makes sure you find the real problem so your fix will actually solve it.
 - When end-to-end testing a product, be picky about the UI you see and be obsessed with pixel perfection. If something clearly looks off, even if it is not directly related to what you are doing, try to get it fixed along the way.
 - Apply that same high standard to engineering excellence: lint, test failures, and test flakiness. If you see one, even if it is not caused by what you are working on right now, still get it fixed.
@@ -66,6 +66,13 @@ How to ask:
 The bar scales with the cost of being wrong.
 Cheap and reversible: make a reasonable assumption and note it.
 Expensive, irreversible, or outward-facing: ask first.
+
+## Working autonomously
+
+- Never game tests or graders to get a green run. Do not delete, weaken, skip, or edit a test, and do not hard code an output to pass. Fix the code instead.
+- Do not tell me something is done, fixed, or passing from inspection alone. Run the real test or command and show the result, and if you cannot verify it, say so plainly.
+- Before any irreversible action, a delete, a force push, or a change to infrastructure, billing, or data, confirm with me and double check you have the exact right target.
+- The hard nevers in this file are advisory, since I follow this file most of the time but not all of it. Where a rule really must hold every single time, put it in a hook or a permission rule, which is enforced rather than advisory.
 
 ## Specs and architecture
 
