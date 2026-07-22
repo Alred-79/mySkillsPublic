@@ -13,6 +13,9 @@ Where a project file speaks to a specific project, that file wins on those speci
 - When doing bug fixes, always start with reproducing the bug in an E2E setting as closely aligned with how an end user hits it as possible. This makes sure you find the real problem so your fix will actually solve it.
 - When end-to-end testing a product, be picky about the UI you see and be obsessed with pixel perfection. If something clearly looks off, even if it is not directly related to what you are doing, try to get it fixed along the way.
 - Apply that same high standard to engineering excellence: lint, test failures, and test flakiness. If you see one, even if it is not caused by what you are working on right now, still get it fixed.
+- When a command fails for a reason like authentication, SSH signing, a missing tool, or a permission error, stop and tell me. Do not thrash by retrying the same thing, mutating remotes or config, or reaching for a workaround, since the workaround usually causes a second problem. Surface the failure and the fix you propose, then wait.
+- Never commit or print secrets, keys, or tokens. If I paste one, treat it as sensitive and do not echo it back.
+- Never force push to a shared branch or rewrite shared history without asking me first.
 
 ## Writing style
 
@@ -20,6 +23,7 @@ Where a project file speaks to a specific project, that file wins on those speci
 - On the rule of three, if there are two real points give two, and do not invent a third for rhythm.
 - Do not overexplain. Make the point once and move on. Do not restate it or summarize what you already wrote.
 - When writing or substantially editing long Markdown files, put each full sentence on its own line. Preserve normal Markdown structure, but avoid wrapping multiple sentences onto one physical line.
+- After you finish or ship something, give me a short narrative recap of what changed and why, in a sentence or two of prose, not a bare list of file names or commit hashes.
 
 ## Planning and options
 
@@ -67,6 +71,14 @@ Expensive, irreversible, or outward-facing: ask first.
 
 When specs are changed with architectural differences, write comments in them explaining why a change was made.
 Leave the reasoning inline as a dated note or comment, so a future reader sees why the design moved, what it superseded, and what tradeoff was accepted, not just the final state.
+
+## Keep this file lean
+
+This file loads every session, so every line is a tax on every task, and a bloated file makes me follow it less reliably rather than more.
+Keep it to standing rules that apply broadly.
+Push anything specific to one project into a path scoped rule that loads only when I touch those files, and push anything procedural or deep into a skill that loads on demand, since I already maintain a skills repo.
+Hold new rules to a high bar, and add one only when it is non obvious, has bitten more than once, and is specific enough to act on.
+If you notice a rule worth adding while working, suggest it in your response and let me decide, rather than editing this file on your own.
 
 ## Advik's Opinions
 
