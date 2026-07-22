@@ -2,6 +2,9 @@
 
 Status: approved design, pre-implementation. Adversarially reviewed 2026-07-19; all 15
 findings resolved in this revision.
+Triggers narrowed 2026-07-22 to explicit deep-learning intent so microworld and
+explain-changes do not collide on a bare "explain this diff" request. microworld is the
+deep tier explain-changes escalates to, and adversarial-verify audits either ledger.
 Depends on: [evidence-protocol.md](evidence-protocol.md)
 Origin: user-supplied draft (protocol.md + SKILL.md, Codex-authored MVP) inspired by
 Geoffrey Litt, "Understanding is the new bottleneck" (geoffreylitt.com, 2026-07-02).

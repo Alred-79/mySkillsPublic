@@ -1,11 +1,11 @@
 From a1b2c3d4e5f60718293a4b5c6d7e8f9012345678 Mon Sep 17 00:00:00 2001
 From: Dev <dev@example.com>
 Date: Tue, 21 Jul 2026 10:00:00 +0000
-Subject: [PATCH] Clamp discount to valid range and guard negative quantities
+Subject: [PATCH] Clamp discount so checkout totals can no longer go negative
 
-Discounts could previously go out of range and produce a negative total.
-This clamps the percentage into [0, 100] and rounds the result to cents so
-checkout math stays safe.
+An out-of-range discount percentage could push a checkout total below zero.
+Clamping the percentage into [0, 100] and rounding to cents makes checkout
+totals safe.
 ---
  pricing.py | 10 ++++++++--
  1 file changed, 8 insertions(+), 2 deletions(-)

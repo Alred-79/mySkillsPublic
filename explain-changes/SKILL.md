@@ -44,7 +44,7 @@ Run the tests that exercise the change and record the real result, so the "what 
 
 ### 4. Compose the reviewer brief at altitude
 
-Terse, high-signal, every line backed by an E-row.
+Terse, high-signal, every line backed by an E-row. The brief scales to the change, a one-line change gets a one-line brief, and the ledger carries only the load-bearing claims, not every observation.
 
 - **What changed and why.** The "why" appears only if the code, a test, or a linked issue evidences it, otherwise omit it or flag it.
 - **Blast radius.** The affected dependents, and explicitly the unaffected ones.
@@ -72,11 +72,11 @@ Claims are rows in a markdown table (greppable, no tooling). This skill emits `E
 
 Because the format is shared across this repo's skills, adversarial-verify can audit an explain-changes brief directly, the E-ledger is already a verification packet.
 
-## Boundaries
+## Boundaries and the funnel
 
-**Versus microworld.** If the user wants to inhabit and truly understand a path, deeply, before or after ship, that is microworld, a heavy playable traced artifact. If they want to explain and de-risk what is being shipped right now, at reviewer altitude, that is this skill.
+explain-changes is the first pass. It briefs any change, in any language, at ship time. **Escalate to microworld** when the brief is not enough and the reviewer wants to inhabit a path and watch it run, which microworld does as a playable traced artifact for Python. **adversarial-verify audits either one.** It re-derives and tries to refute the claims in an E-ledger (this skill) or an M-ledger (microworld), so the deeper the tier the harder the check.
 
-**Versus code-review and differential-review.** This skill explains a change, it does not hunt for bugs or security holes. When the ask is "find what is wrong with this," route to those skills. explain-changes owns the explanation dimension only, and can hand its E-ledger to them or to adversarial-verify as a closer.
+**Not a defect hunter.** This skill explains a change, it does not look for bugs or security holes. When the ask is "find what is wrong with this," route to code-review or differential-review.
 
 ## Invocation
 

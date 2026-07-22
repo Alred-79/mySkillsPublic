@@ -60,7 +60,9 @@ It explains and de-risks the change you are shipping, where microworld is for de
 **[microworld](microworld/).**
 This one has no close famous ancestor.
 Where an explainer narrates what code does or simulates it, this turns a real Python path or commit into a prediction-first playable artifact built from real execution traces, where you predict before you see and every displayed number comes from a real trace rather than a simulation, closed by a comprehension gate.
-It is for grasping what an AI-written diff actually does at runtime, not what its tests claim.
+It is the deep tier you escalate to from explain-changes when a brief is not enough and you want to watch the code run, grounded in what actually executed rather than what the tests claim.
+
+explain-changes, microworld, and adversarial-verify form one pipeline. explain-changes briefs any change you ship, microworld lets you inhabit the ones worth a closer look, and adversarial-verify blind-audits the claims of either, so the deeper you go the harder the check.
 
 ## Install
 

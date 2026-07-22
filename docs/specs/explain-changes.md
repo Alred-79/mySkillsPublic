@@ -1,6 +1,6 @@
 # Spec: explain-changes
 
-Status: approved design, skill + eval fixtures authored (paired benchmark run pending)
+Status: approved design, skill + eval fixtures authored and hardened after a paired smoke trial (full benchmark run pending)
 Depends on: [evidence-protocol.md](evidence-protocol.md)
 Siblings: [adversarial-verify.md](adversarial-verify.md) (audits this skill's E-ledger), [microworld.md](microworld.md) (the deep-understanding counterpart, boundary drawn below)
 
@@ -45,6 +45,8 @@ microworld and explain-changes share this repo's DNA, a claim is worth nothing u
 | Reach | Python-only, single-process, sandbox receipt | language-agnostic |
 
 Rule of thumb written into both descriptions. If the user wants to inhabit and truly understand a path, that is microworld. If they want to explain and de-risk what was just shipped, that is this skill.
+
+**The funnel (added 2026-07-22).** explain-changes is the first pass, microworld is the deep tier you escalate to for a playable run, and adversarial-verify audits either ledger. microworld's trigger surface was narrowed the same day to explicit deep-learning intent so the two do not collide on a bare "explain this diff" request; the review-and-ship phrasings live here. A paired smoke trial on 2026-07-22 showed a frontier baseline already caught the original marquee traps, so the checkout fixture was hardened (subtle overclaim plus transitive blast radius) to keep the eval a frontier task.
 
 ## Files
 
@@ -105,11 +107,11 @@ It complements fix-issue, which proves a specific bug fix holds, by writing the 
 
 Artifacts in `evals/`, shared rules in [evidence-protocol.md](evidence-protocol.md).
 
-- **Fixture checkout** (evals 1 and 2): a small Python checkout module with a seeded change delivered as a git patch. The patch's commit subject claims it "handles negative quantities safely," but the diff does not touch quantities at all, the intent-parrot trap. The changed `apply_discount` has one genuinely affected call site (`cart.checkout_total`, variable out-of-range percentage) and one unaffected call site in another file (`reports.promo_preview`, fixed in-range percentage), the cross-file scoping test. The change introduces money rounding whose agreement with the downstream payment processor is not derivable from the repo, the must-flag unverifiable. A passing test covers the happy path only, so "verified green" must come from a real run and the untested clamp and negative paths must be grounded in their absence. An unrelated module is present as a scope decoy the brief must not narrate.
+- **Fixture checkout** (evals 1 and 2): a small Python checkout module with a seeded change delivered as a git patch, traps tuned so a frontier model cannot pass by reading the diff. The commit subject claims the change makes it so checkout totals can no longer go negative, but the clamp bounds only the percentage, so a negative subtotal from a negative-quantity line still yields a negative total, a subtle overclaim catchable only by a run or by tracing the subtotal. `api.final_price` reaches the changed function only through `checkout_total`, so a grep for the changed symbol misses it and the blast radius must be traced repo-wide. `reports.promo_preview` passes a fixed in-range percentage and is not reached by the clamp. The change adds money rounding whose agreement with the downstream processor is not derivable from the repo, the must-flag unverifiable. A passing test covers the happy path only, so verified-green must come from a real run and the negative-subtotal path grounded as untested. An unrelated module is a scope decoy.
 - **Fixture logfix** (eval 3): a one-line change (a corrected log string) that guards the opposite failure, over-production. The correct output is a proportionate one-line brief with no invented blast radius and no ceremony.
 - **Deterministic gates** (scored, >=3 reps, no-skill baseline arm, >=2 model tiers): blast-radius correctness on both the affected and the unaffected call site, the anti-parrot hard fail, the unverifiable-flag hard fail, grounded test result, scope restraint, rollback correctness, and no banned vague words.
 - **Hard fails (pass^k, every rep).** Repeating the "handles negative quantities" claim as done is a hard fail. Asserting the rounding is correct rather than flagging it is a hard fail. Both are the fabricated-certainty failure mode, the same shape as cost-optimizer's no-derivable-volume hard fail.
-- **RED baseline expectation.** The no-skill arm, or Claude Code's built-in PR summary, is expected to parrot the commit subject's "negative quantities" claim, miss the unaffected classification of the cross-file call site, assert the change is correct without flagging the rounding question, and promise to run the tests without grounding in a real run. That gap is the uplift.
+- **RED baseline expectation.** The no-skill arm, or Claude Code's built-in PR summary, is expected to restate the totals-can-no-longer-go-negative claim since the clamp superficially supports it, scope the blast radius from a grep of the changed symbol and miss the transitive `api.final_price`, and assert or ignore the rounding rather than flag it. A capable model may still run the tests and find the direct callers, so the uplift concentrates on the transitive scoping, the subtle overclaim, and the unverifiable flag (evidence-protocol rule 6, prune what both arms pass while keeping the seed).
 - **Trigger evals (separate, per evidence-protocol rule 5).** About 20 queries, 8 to 10 should-trigger ("explain what I'm shipping", "write the PR description for this change", "what does this diff actually do", "explain this change before I merge") against 8 to 10 near-miss should-not-trigger cases, the sharpest being "help me understand this whole module," which must route to microworld, and "review this PR for bugs," which must route to code-review. Each run 3 times, 60/40 train/test split so the description is not overfit.
 
 ## Out of scope
