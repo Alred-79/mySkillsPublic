@@ -76,7 +76,7 @@ Because the format is shared across this repo's skills, adversarial-verify can a
 
 explain-changes is the first pass. It briefs any change, in any language, at ship time. **Escalate to microworld** when the brief is not enough and the reviewer wants to inhabit a path and watch it run, which microworld does as a playable traced artifact for Python. **adversarial-verify audits either one.** It re-derives and tries to refute the claims in an E-ledger (this skill) or an M-ledger (microworld), so the deeper the tier the harder the check.
 
-**Not a defect hunter.** This skill explains a change, it does not look for bugs or security holes. When the ask is "find what is wrong with this," route to code-review or differential-review.
+**Not a defect hunter, but never silent.** This skill explains a change, it does not run a full defect or security scan, so when the ask is "find what is wrong with this," route to code-review or differential-review. But if you notice something that looks wrong while explaining, flag it in a line and point there. Explaining a change honestly includes saying when it looks broken; withholding that to stay in lane would make the brief worse than a plain read. What routes away is the systematic hunt, not the observation.
 
 ## Invocation
 

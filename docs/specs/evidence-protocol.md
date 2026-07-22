@@ -21,6 +21,15 @@ ledger format lets the skills compose natively:
 - revamp-ui's DESIGN-CONTRACT doubles as a verification packet.
 - Any future skill in the repo inherits verification for free by emitting assertions.
 
+## The output-dominance rule (binds every skill)
+
+A skill exists to make the output better than a plain capable model would produce on its own, never worse. A rule that makes the model say less, or worse, than it naturally would, in order to look distinct, is a defect, not a feature. Two corollaries bind every skill in this repo:
+
+1. **Scope bounds effort, not speech.** A skill's routing and lane rules ("that is another skill's job") say where this skill spends its effort, never what it is allowed to say. If you notice something important outside the lane while working, surface it in a line and point to the right skill, the way productionize leaves "a one-line pointer" to code-audit. Never withhold a useful observation to keep a clean boundary.
+2. **Ceremony scales to the task.** Ledgers, interviews, and multi-phase machinery earn their place per input. A trivial input gets a proportionate response, following fix-issue's "do not over-ceremony a typo" and revamp-ui's "do not stall a user who already delegated." Structure that costs the reader more than it returns is cut.
+
+The delta a skill encodes is what its instructions concentrate on, never a subtraction from what the model already does well.
+
 ## The assertion record
 
 Ledgers are markdown files with a table (human-readable, greppable, no tooling required).
