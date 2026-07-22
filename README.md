@@ -1,7 +1,21 @@
 # mySkillsPublic
 
-A pack of Claude Code skills that encode only the delta a frontier model will not produce on its own, and that the well-known skills do not already cover.
-Every skill is research-backed, adversarially verified, and ships with its own evals and fixtures.
+A pack of Claude Code skills for the part of AI work that is actually hard now, trusting it.
+
+The models write the code, the analysis, and the answer. What they will not do unprompted is prove any of it is right or admit what they could not check. Each skill here takes one spot where you would otherwise have to take an AI's word for something and replaces the word with grounded, cited evidence, so you can act on the output without getting burned.
+
+Every skill encodes only the delta a frontier model will not produce on its own, names the well-known skill it improves on, and ships with its own evals and fixtures as proof.
+
+## What makes them different
+
+The gap this pack fills is not a longer prompt, it is what you can rely on afterward.
+
+- **You can act on the output without re-checking it by hand.** Every skill emits an evidence ledger where each claim is tied to a real artifact, a code hunk, a command's output, a registry lookup, or an execution trace. You read a cited finding, not the model's recollection.
+- **The skills check each other.** They share one assertion format, so adversarial-verify can audit any other skill's output directly. Verification is the ground the whole pack stands on, not a feature bolted onto one skill.
+- **Each one ships proof that it beats a raw model.** Every skill carries an eval with a no-skill baseline, so it has to earn its place, and it is built to retire itself the day the base model closes the gap. The evals reward real capability without punishing creative divergence.
+- **They point at what they could not verify.** An unchecked claim is surfaced as a finding, never smoothed into a confident sentence. What the model cannot confirm is where your risk lives, so the skills put it in front of you.
+
+The shared discipline lives in [docs/specs/](docs/specs/), one evidence-protocol assertion format the skills share, an eval architecture per skill, and every finding checked against a primary source.
 
 ## Skills
 
@@ -39,6 +53,10 @@ The taste target is made explicit and measured rather than assumed.
 Where Anthropic's skill-creator authors a new skill and a registry ranks candidates by popularity, this finds the best existing skill for your actual need, ranks it on relevance and safety rather than stars, and gates every candidate through a static scan for pipe-to-shell, credential exfiltration, destructive commands, and prompt injection.
 An opt-in sandbox trial measures whether a skill actually helps, and it never clears one as safe.
 
+**[explain-changes](explain-changes/).**
+Where the built-in commit and PR drafters and the paid PR bots summarize the diff and restate your intent, this explains the change at ship time grounded strictly in the real diff and a real test run, scopes the true blast radius across the repo including the call sites it does not touch, and flags what it could not verify instead of smoothing it over.
+It explains and de-risks the change you are shipping, where microworld is for deeply inhabiting a path and code-review is for hunting defects.
+
 **[microworld](microworld/).**
 This one has no close famous ancestor.
 Where an explainer narrates what code does or simulates it, this turns a real Python path or commit into a prediction-first playable artifact built from real execution traces, where you predict before you see and every displayed number comes from a real trace rather than a simulation, closed by a comprehension gate.
@@ -48,14 +66,6 @@ It is for grasping what an AI-written diff actually does at runtime, not what it
 
 Drop a skill folder into `~/.claude/skills/` (personal) or `.claude/skills/` (project), or install the repo as a plugin.
 Claude loads a skill by its `SKILL.md`, and triggers it from the description when a matching task comes up.
-
-## How these are built
-
-Every skill follows a shared discipline, documented in [docs/specs/](docs/specs/):
-
-- **evidence-protocol** gives all skills one assertion-ledger format, so a skill can audit another skill's output.
-- **No skill ships without an eval.** Each skill folder carries `evals/` with fixtures and expected outcomes, designed to reward real capability without punishing creative divergence.
-- Findings and citations are verified against primary sources, and each skill encodes only what a frontier model will not already do unprompted.
 
 ## CLAUDE.md
 

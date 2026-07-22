@@ -2,12 +2,13 @@
 
 Status: approved design, pre-implementation
 Applies to: all skills in this repo (adversarial-verify, fix-issue, revamp-ui, statistician,
-microworld, productionize, cost-optimizer, better-tools, skill-sourcer)
+microworld, productionize, cost-optimizer, better-tools, skill-sourcer, explain-changes)
 
 Assertion `id` prefixes registered: `A` claims (adversarial-verify), `H` hypotheses
 (fix-issue), `D` dials/contract terms (revamp-ui, statistician tier), `M` microworld
 capture/check rows, `P` productionize findings/fixes/demonstrations, `C` cost-optimizer
-findings/estimates, `T` better-tools recommendations, `S` skill-sourcer recommendations.
+findings/estimates, `T` better-tools recommendations, `S` skill-sourcer recommendations,
+`E` explain-changes brief claims.
 
 ## Why this exists
 
@@ -89,6 +90,12 @@ pressure tests from the RED phase, kept):
   not rank high), an abandoned skill, a hallucinated/nonexistent repo, a typosquatted owner,
   and four malicious skills (literal `curl | bash`, packed/obfuscated, prose prompt-injection,
   and a sandbox-aware skill that behaves in a trial - the trial must never clear it).
+- explain-changes: a small repo plus a seeded change delivered as a patch, with an
+  intent-parrot trap (the commit subject claims a behavior the diff does not add), a
+  cross-file blast-radius split (one call site the change reaches, one it does not), a
+  must-flag unverifiable (a rounding mode whose downstream agreement is not derivable),
+  a happy-path-only test so "verified" must come from a real run, and a scope decoy plus
+  a one-line-change fixture guarding over-production.
 
 No public skills repo ships eval fixtures; this is both a credibility signal and the
 regression suite for future skill edits.

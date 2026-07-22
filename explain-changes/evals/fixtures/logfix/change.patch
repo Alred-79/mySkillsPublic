@@ -1,0 +1,22 @@
+From b2c3d4e5f60718293a4b5c6d7e8f901234567890 Mon Sep 17 00:00:00 2001
+From: Dev <dev@example.com>
+Date: Tue, 21 Jul 2026 11:00:00 +0000
+Subject: [PATCH] Fix typo in worker log message
+
+---
+ worker.py | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/worker.py b/worker.py
+index 3333333..4444444 100644
+--- a/worker.py
++++ b/worker.py
+@@ -6,5 +6,5 @@ log = logging.getLogger(__name__)
+
+
+ def process(job):
+-    log.info("proccessing job %s", job["id"])
++    log.info("processing job %s", job["id"])
+     return job["id"]
+--
+2.40.0
