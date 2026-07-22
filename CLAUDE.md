@@ -9,14 +9,15 @@ Where a project file speaks to a specific project, that file wins on those speci
 - When writing commit messages, NEVER auto-add your agent name as co-author.
 - Never manually modify CHANGELOG.md files or any files marked as auto-generated.
 - When making technical decisions, do not give much weight to development cost. Instead, prefer quality, simplicity, robustness, scalability, and long term maintainability.
+- Avoid overengineering. Build the simplest thing that solves the problem in front of you, and do not add speculative abstraction, extra features, or complexity I did not ask for. If a simpler design does the job, choose it.
 - When doing bug fixes, always start with reproducing the bug in an E2E setting as closely aligned with how an end user hits it as possible. This makes sure you find the real problem so your fix will actually solve it.
 - When end-to-end testing a product, be picky about the UI you see and be obsessed with pixel perfection. If something clearly looks off, even if it is not directly related to what you are doing, try to get it fixed along the way.
 - Apply that same high standard to engineering excellence: lint, test failures, and test flakiness. If you see one, even if it is not caused by what you are working on right now, still get it fixed.
 
 ## Writing style
 
-- Never use the em dash "—". Use a plain dash "-" instead, and do not swap in an awkward colon or semicolon to dodge the rule. If a sentence only works with an em dash, rewrite the sentence.
-- Do not lean on the rule of three, the triple used for rhythm. If there are two real points, give two. Do not invent a third to round out the cadence.
+- Never use dashes or colons in prose, and never lean on the rule of three. These are the tells that make writing read like a model instead of a person. No em dash, no plain hyphen used as a connector or an aside, and no colon used to set up or break a clause. Write full sentences with commas and periods. If a sentence seems to need a dash or a colon, rewrite it. Keep dashes and colons only where they are structural rather than prose, such as code, file paths, times, or ratios.
+- On the rule of three, if there are two real points give two, and do not invent a third for rhythm.
 - Do not overexplain. Make the point once and move on. Do not restate it or summarize what you already wrote.
 - When writing or substantially editing long Markdown files, put each full sentence on its own line. Preserve normal Markdown structure, but avoid wrapping multiple sentences onto one physical line.
 
@@ -32,11 +33,12 @@ For each option, say:
 Do not present options as an equivalent menu.
 End with a recommendation and the reason for it.
 
-## Assumptions in plans
+## Assumptions
 
-For any large plan or spec, list the assumptions it rests on in one place.
-For each, mark whether it is confirmed or something you assumed and I should check.
-Call out the assumptions that would change the plan if they turn out wrong, so I can correct them before you build.
+Always log the assumptions you are working from, not only in large plans but in everyday work, so I can see what you are going off of.
+Whenever a choice rests on something you assumed rather than something I confirmed, say so plainly in your response.
+For any large plan or spec, gather the assumptions in one place, and mark each as confirmed or assumed so I can check the ones that matter.
+Call out any assumption that would change the work if it turned out wrong, so I can correct it before you build.
 
 ## Asking clarifying questions (low confidence)
 
