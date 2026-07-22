@@ -2,12 +2,12 @@
 
 Status: approved design, pre-implementation
 Applies to: all skills in this repo (adversarial-verify, fix-issue, revamp-ui, statistician,
-microworld, productionize, cost-optimizer, better-tools)
+microworld, productionize, cost-optimizer, better-tools, skill-sourcer)
 
 Assertion `id` prefixes registered: `A` claims (adversarial-verify), `H` hypotheses
 (fix-issue), `D` dials/contract terms (revamp-ui, statistician tier), `M` microworld
 capture/check rows, `P` productionize findings/fixes/demonstrations, `C` cost-optimizer
-findings/estimates, `T` better-tools recommendations.
+findings/estimates, `T` better-tools recommendations, `S` skill-sourcer recommendations.
 
 ## Why this exists
 
@@ -84,6 +84,11 @@ pressure tests from the RED phase, kept):
   better, a deprecated dep with a live successor, two overlapping deps, a heavy dev-tool
   with a lighter swap) plus poisoned bait - a guaranteed-permanently-invalid package name,
   an EOL/abandoned package, a trendy-but-immature package, and a stdlib-suffices case.
+- skill-sourcer: a project + prompt with explicit requirements, and a seeded skill pool
+  - a relevant+safe+maintained skill (ranks first), a popular-but-off-target skill (must
+  not rank high), an abandoned skill, a hallucinated/nonexistent repo, a typosquatted owner,
+  and four malicious skills (literal `curl | bash`, packed/obfuscated, prose prompt-injection,
+  and a sandbox-aware skill that behaves in a trial - the trial must never clear it).
 
 No public skills repo ships eval fixtures; this is both a credibility signal and the
 regression suite for future skill edits.

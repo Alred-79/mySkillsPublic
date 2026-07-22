@@ -15,6 +15,7 @@ Each skill is research-backed, adversarially verified, and ships with its own ev
 | [cost-optimizer](cost-optimizer/) | Read code, IaC, and config statically and find dollar-quantified cost waste across cloud, LLM, runtime, and data, then fix and estimate. |
 | [better-tools](better-tools/) | Scan a whole app and recommend genuinely better libraries and tooling, with every recommendation grounded in a live registry and health check rather than model memory. |
 | [microworld](microworld/) | Turn a real Python code path or commit into a validated, prediction-first, playable learning artifact so a human can understand what AI-written code actually does. Every displayed value comes from a real trace, never a simulation. |
+| [skill-sourcer](skill-sourcer/) | Find the best existing agent skills for your project across registries, GitHub, and directories, ranked on relevance to your explicit need and on safety rather than popularity. An opt-in sandbox trial measures whether a skill actually helps; it never clears one as safe. |
 
 ## Install
 
