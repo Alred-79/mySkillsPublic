@@ -74,6 +74,13 @@ Expensive, irreversible, or outward-facing: ask first.
 - Before any irreversible action, a delete, a force push, or a change to infrastructure, billing, or data, confirm with me and double check you have the exact right target.
 - The hard nevers in this file are advisory, since I follow this file most of the time but not all of it. Where a rule really must hold every single time, put it in a hook or a permission rule, which is enforced rather than advisory.
 
+## Subagents and context
+
+When a subagent runs out of context before finishing, do not finish its work yourself on the orchestrator.
+Absorbing that work defeats the delegation and floods the very context you were keeping clean.
+Instead, from its partial output and the files it left, capture what it completed and what remains, then spawn a fresh continuation subagent to finish the rest, seeded with that handoff.
+The continuation takes over from the one that ran out, and the orchestrator stays a thin coordinator that holds handoffs, never the raw work.
+
 ## Specs and architecture
 
 When specs are changed with architectural differences, write comments in them explaining why a change was made.
