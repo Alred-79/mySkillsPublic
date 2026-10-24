@@ -56,6 +56,11 @@ Where a design skill applies taste directly and hopes you like the result, this 
 The taste target is made explicit and measured rather than assumed.
 Its eval starts from a slop-ridden page carrying the banned AI defaults, and scores hitting the elicited spectacle-versus-simplicity contract, screenshot-checked against its floors and ceilings.
 
+**[3d-ui-optimizer](3d-ui-optimizer/).**
+Where taste-skill, impeccable, emil-design-eng, and the Three.js, R3F, and GSAP skills each hand you rules for one layer, and often contradict the official docs and each other, this combines them into one craft engine that finds the signature idea in the client's own material, picks the cheapest technique that lands it, and builds it with the art direction, budgets, and degradation that generated defaults skip.
+Then it freezes the animation at exact moments, screenshots its own output across viewports, reduced motion, and no WebGL, and reports measured counts, so "it looks great" comes with frames behind it.
+Its eval seeds a template page whose generic 3D reflex fails a competitor test, an R3F scene with thirteen defects beside five correct decoys it must not break, and a keyboard-driven command palette where the right answer is less motion and no 3D.
+
 **[skill-sourcer](skill-sourcer/).**
 Where Anthropic's skill-creator authors a new skill and a registry ranks candidates by popularity, this finds the best existing skill for your actual need, ranks it on relevance and safety rather than stars, and gates every candidate through a static scan for pipe-to-shell, credential exfiltration, destructive commands, and prompt injection.
 An opt-in sandbox trial measures whether a skill actually helps, and it never clears one as safe.

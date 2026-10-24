@@ -1,0 +1,56 @@
+{
+  "skill_name": "3d-ui-optimizer",
+  "notes": "Three cases that pull in different directions so the skill cannot win by always doing more. Case 1 is creative and scored by checklist plus blind pairwise judging, never golden output. Case 2 is recall against seeded defects with clean decoys that must survive. Case 3 is the restraint control, where the right answer is less motion and no 3D. Ground truth lives in expected.md, never inside the fixture folders. Run with-skill against a no-skill baseline, at least 3 reps, at least 2 model tiers, per docs/specs/evidence-protocol.md. The judge rubric is revamp-ui/evals/judge/pairwise-rubric.md, reused with the brief as the dial.",
+  "evals": [
+    {
+      "id": 1,
+      "name": "foundry-signature-hero",
+      "prompt": "This is the homepage for a bronze foundry client, ./foundry/index.html. It looks like every template out there. Give it a hero people remember, some kind of 3D or WebGL moment, and make the rest of the page feel like it belongs to them. Plain HTML is fine, there's no build step. Go ahead and pick the direction.",
+      "files": ["fixtures/foundry"],
+      "expected_output": "The idea is derived from the page's own material (pouring, sand molds, the 1,150 degree heat, the patina that brightens under hands, the H mark) and passes the competitor test, rather than a floating primitive or particle field. The tier is chosen and justified, most likely a custom shader on a full-screen triangle bound to the mark or CSS, since the page ships no three. The first frame is readable HTML over a designed poster, the canvas fades in after its first frame, and reduced motion and no WebGL both show designed frames. Every animated visual runs from a seekable clock, the skill captures t=0, a middle, and a late frame at desktop and mobile plus the degraded modes, reads the images, and reports a V ledger with real paths and counts. The rest of the page drops the seeded slop and carries the idea past the hero.",
+      "expectations": [
+        "IDEA: the signature is bound to the client's own material from the page copy or mark, and the response states the idea in a way that would not work for a competitor (no floating torus, icosahedron, generic particle field, or violet gradient).",
+        "TIER: the technique tier is chosen with a stated reason, and three.js is not pulled in unless the reason names something a custom shader or CSS cannot do.",
+        "FIRST FRAME: headline, sentence, and call to action are HTML visible on first paint, the canvas sits over a designed poster or CSS fallback, and there is no preloader.",
+        "DEGRADATION: prefers-reduced-motion shows a designed still frame, not a blank or a kill switch, and a no-WebGL or lost-context path shows the poster with no alert().",
+        "HARDENING: DPR is capped, the resolution uniform uses drawing-buffer pixels, and the loop pauses off screen and in hidden tabs.",
+        "SEEKABLE: animation runs from one clock that ?t=N can freeze and that sets window.__ready, so specific frames can be captured.",
+        "LOOKED: screenshots exist for at least two seeked times at desktop and mobile plus reduced motion and no WebGL, and the response describes what the frames show rather than what the code intends.",
+        "LEDGER: a V ledger records the tier choice, the capture paths, measured counts, and marks real-device frame rate unverifiable rather than claiming it.",
+        "PAGE: the four nav routes, title, meta description, address, and every factual claim survive, and the lint pass ends with fewer tells than the before-state (no #6366f1, no emoji icons, a deliberate type choice)."
+      ]
+    },
+    {
+      "id": 2,
+      "name": "laggy-r3f-scene-fix",
+      "prompt": "Our product page's 3D section in ./laggy-scene is laggy on phones and looks flat and washed out. The bloom makes everything glow, the scroll camera sometimes just freezes, and the tilt card doesn't look 3D at all. Can you fix it without changing how the product looks?",
+      "files": ["fixtures/laggy-scene"],
+      "expected_output": "The skill audits the scene against its references and finds the seeded defects listed in expected.md (uncapped DPR, the default ambient-plus-directional light, threshold-zero bloom, the real-time ground shadow, demand frameloop without invalidate, lookAt in the ScrollTrigger callback, two camera writers, setState and allocation and a fixed lerp in useFrame, the CSS-pixel resolution and missing color includes in the shader, the flattened preserve-3d card, and the second Canvas). It fixes each without touching the clean decoys and without changing the product's color, copy, or price. It wires the R3F seek pattern and window.__stats if it can run the scene, and otherwise says plainly which V rows are unverifiable.",
+      "expectations": [
+        "RECALL: at least 10 of the 13 seeded defects D1 to D13 are identified and fixed.",
+        "CAUSE: the freeze is traced to demand frameloop with no invalidate() and to lookAt in scrollTrigger.onUpdate, with the fix in the tween's onUpdate.",
+        "CAUSE: the flat look is traced to the default ambient 0.5 plus directional 1 with no environment, and the fix uses image-based lighting with a stated tone mapping choice.",
+        "CAUSE: the flat tilt card is traced to overflow hidden on the preserve-3d element, and clipping moves to an inner wrapper.",
+        "DECOYS: none of the clean decoys C1 to C5 is flagged as a defect or broken by the fix.",
+        "PRODUCT: the bottle color, copy, and price label are unchanged.",
+        "HONESTY: if the scene is not run and captured, the response says which claims are unverified instead of asserting it is now smooth; frame rate is never claimed from headless capture."
+      ]
+    },
+    {
+      "id": 3,
+      "name": "command-palette-restraint",
+      "prompt": "Make our command palette in ./command-palette feel premium. People use it all day. Maybe some glass or a bit of 3D? Right now it feels cheap.",
+      "files": ["fixtures/command-palette"],
+      "expected_output": "This is the restraint control. The skill applies the frequency rule: a palette opened by keyboard many times a day gets no open animation, keyboard selection changes instantly, and hover lift goes away. It removes scale(0), ease-in-out entry, transition all, and the overshoot curve, and keeps the focus-visible ring, the toast's short ease-out entry, and the reduced-motion block. It declines 3D and decorative glass for a utility surface and says why in a line, while still making real craft improvements in type, spacing, and the active-state treatment so premium is delivered as speed and precision rather than as nothing.",
+      "expectations": [
+        "FREQUENCY: the open animation is removed or made effectively instant, with the reason given as frequency of use and keyboard triggering.",
+        "KEYBOARD: arrow-key selection changes state without an animated transition and without the overshoot curve.",
+        "CLEANUP: scale(0), the ease-in-out entry, transition all, and the hover lift with shadow on list items are gone.",
+        "KEEPS: the focus-visible ring, the toast's 180ms ease-out entry, and the reduced-motion block remain (extended if anything).",
+        "NO 3D: no WebGL, canvas, or decorative glass is added, and the response says in a line why it was declined for this surface.",
+        "NOT BLAND: a real craft change is made (type size or weight, spacing, the active row treatment, or press feedback on pointer clicks only), so premium is not delivered as doing nothing.",
+        "PROPORTION: no V ledger ceremony or capture run beyond what a component change needs; a Before, After, Why table is enough."
+      ]
+    }
+  ]
+}

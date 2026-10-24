@@ -2,13 +2,15 @@
 
 Status: approved design, pre-implementation
 Applies to: all skills in this repo (adversarial-verify, fix-issue, revamp-ui, statistician,
-microworld, productionize, cost-optimizer, better-tools, skill-sourcer, explain-changes)
+microworld, productionize, cost-optimizer, better-tools, skill-sourcer, explain-changes,
+3d-ui-optimizer)
 
 Assertion `id` prefixes registered: `A` claims (adversarial-verify), `H` hypotheses
 (fix-issue), `D` dials/contract terms (revamp-ui, statistician tier), `M` microworld
 capture/check rows, `P` productionize findings/fixes/demonstrations, `C` cost-optimizer
 findings/estimates, `T` better-tools recommendations, `S` skill-sourcer recommendations,
-`E` explain-changes brief claims.
+`E` explain-changes brief claims, `V` 3d-ui-optimizer visual claims (tier choice, captured
+frames, measured counts).
 
 ## Why this exists
 
