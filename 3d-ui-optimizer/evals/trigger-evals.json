@@ -1,0 +1,22 @@
+[
+  { "query": "can you add a 3D hero to our landing page, something with the product slowly turning under nice light", "should_trigger": true },
+  { "query": "make our wordmark look like liquid chrome on the homepage, I saw that liquid-logo effect and want something like it", "should_trigger": true },
+  { "query": "our r3f product viewer drops to like 20fps on my iphone, can you figure out why and fix it", "should_trigger": true },
+  { "query": "why does my three.js scene look so flat and washed out? the bloom also makes everything glow", "should_trigger": true },
+  { "query": "I want an animated shader gradient behind the hero text, the silky ribbon kind", "should_trigger": true },
+  { "query": "build a scroll-driven story where the camera flies around the bottle as you scroll, gsap is already installed", "should_trigger": true },
+  { "query": "the dropdown menu animation feels cheap and sluggish, make it feel snappier", "should_trigger": true },
+  { "query": "add a liquid glass effect to the floating nav bar over the photo carousel", "should_trigger": true },
+  { "query": "this modal open/close transition feels off, can you make it feel better", "should_trigger": true },
+  { "query": "add some particles that react to the cursor in the hero section, but keep it fast on mobile", "should_trigger": true },
+  { "query": "our whole marketing site looks dated and generic, redesign it so it feels modern and premium", "should_trigger": false },
+  { "query": "revamp our landing page, it feels like every other AI SaaS site", "should_trigger": false },
+  { "query": "make our dashboard calmer and simpler, there is way too much going on visually across the app", "should_trigger": false },
+  { "query": "reskin the whole app with a new brand palette, keep all the pages and routes working", "should_trigger": false },
+  { "query": "can you modernize the look of our docs site overall", "should_trigger": false },
+  { "query": "the /api/orders endpoint is slow, add caching", "should_trigger": false },
+  { "query": "write a blender python script that batch exports my models to fbx", "should_trigger": false },
+  { "query": "explain what this webgl shader does line by line, I'm trying to learn glsl", "should_trigger": false },
+  { "query": "fix the failing jest test in the checkout form component", "should_trigger": false },
+  { "query": "set up eslint and prettier for this react project", "should_trigger": false }
+]

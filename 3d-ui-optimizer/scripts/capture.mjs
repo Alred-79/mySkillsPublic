@@ -1,8 +1,9 @@
 #!/usr/bin/env node
 // capture.mjs: look at a visual before claiming it works.
 // Screenshots a page at seeked times (?t=N, see seek-clock.js), at scroll positions, under
-// reduced motion, and with WebGL disabled, at desktop and mobile sizes. Reports console errors,
-// whether the page signalled window.__ready, the WebGL renderer, and window.__stats if exposed.
+// reduced motion, and with WebGL disabled, at desktop (1440, DPR 1) and mobile (390, DPR 2).
+// Reports console errors, whether the page signalled window.__ready, the WebGL renderer,
+// and window.__stats if the page exposes it.
 //
 //   node capture.mjs <url> [--t 0,2,4] [--scroll 0,0.5,1] [--out shots] [--timeout 10000]
 //                          [--settle 800] [--no-degraded]
@@ -16,7 +17,8 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
-const argv = process.argv.slice(2);
+// Accept both `--name value` and `--name=value`.
+const argv = process.argv.slice(2).flatMap((a) => (a.startsWith('--') && a.includes('=') ? a.split(/=(.*)/s, 2) : [a]));
 const opt = (name, fallback) => {
   const i = argv.indexOf(`--${name}`);
   return i === -1 ? fallback : argv[i + 1];
@@ -55,17 +57,35 @@ const withT = (u, t) => {
   return x.href;
 };
 
+async function launch(args) {
+  try {
+    return await chromium.launch({ args });
+  } catch (e) {
+    console.error(`could not launch Chromium: ${String(e.message).split('\n')[0]}`);
+    console.error('If the browser is missing, run: npx playwright install chromium');
+    process.exit(3);
+  }
+}
+
 mkdirSync(out, { recursive: true });
 const shots = [];
 
-async function shoot(browser, { name, vp, target, reducedMotion = 'no-preference', scrollFraction = null }) {
+async function shoot(browser, { name, vp, target, reducedMotion = 'no-preference', scrollFraction = null, seekT = null }) {
   const ctx = await browser.newContext({ ...VIEWPORTS[vp], reducedMotion });
   const page = await ctx.newPage();
   const errors = [];
   page.on('console', (m) => m.type() === 'error' && errors.push(m.text()));
   page.on('pageerror', (e) => errors.push(String(e)));
-  await page.goto(target, { waitUntil: 'load', timeout });
-  const ready = await page
+  const row = { name, file: null, dpr: VIEWPORTS[vp].deviceScaleFactor, ready: false, errors };
+  try {
+    await page.goto(target, { waitUntil: 'load', timeout });
+  } catch (e) {
+    errors.push(`navigation failed: ${String(e.message).split('\n')[0]}`);
+    await ctx.close();
+    shots.push(row);
+    return row;
+  }
+  row.ready = await page
     .waitForFunction(() => window.__ready === true, null, { timeout })
     .then(() => true, () => false);
   if (scrollFraction !== null) {
@@ -79,7 +99,18 @@ async function shoot(browser, { name, vp, target, reducedMotion = 'no-preference
     }, scrollFraction);
   }
   // Scrubbed timelines keep catching up after the scroll stops, so let them settle.
-  if (!ready || scrollFraction !== null) await page.waitForTimeout(settle);
+  if (!row.ready || scrollFraction !== null) await page.waitForTimeout(settle);
+  if (seekT !== null) {
+    // Seek CSS animations, transitions and Web Animations on the document timeline to the same moment
+    // as the canvas. Scroll-driven animations follow the scroll position instead and are left alone.
+    await page.evaluate((t) => {
+      for (const a of document.getAnimations()) {
+        if (a.timeline !== document.timeline) continue;
+        a.pause();
+        a.currentTime = t * 1000;
+      }
+    }, seekT);
+  }
   const info = await page.evaluate(() => {
     const c = document.createElement('canvas');
     const gl = c.getContext('webgl2') || c.getContext('webgl');
@@ -91,18 +122,20 @@ async function shoot(browser, { name, vp, target, reducedMotion = 'no-preference
     return { webgl: !!gl, renderer, stats: window.__stats ?? null };
   });
   const file = join(out, `${name}.png`);
-  // animations: 'disabled' jumps CSS transitions to their end state, so a canvas fade-in is never caught half drawn.
-  await page.screenshot({ path: file, animations: 'disabled' });
+  // Seeked and scroll shots keep animations where they were put. Other shots jump finite CSS
+  // animations and transitions to their end state, so a canvas fade-in is never caught half drawn.
+  const animations = seekT !== null || scrollFraction !== null ? 'allow' : 'disabled';
+  await page.screenshot({ path: file, animations });
   await ctx.close();
-  const row = { name, file, ready, errors, ...info };
+  Object.assign(row, { file, ...info });
   shots.push(row);
   return row;
 }
 
-const gl = await chromium.launch({ args: GL_ARGS });
+const gl = await launch(GL_ARGS);
 for (const vp of Object.keys(VIEWPORTS)) {
   if (times.length) {
-    for (const t of times) await shoot(gl, { name: `${vp}-t${t}`, vp, target: withT(url, t) });
+    for (const t of times) await shoot(gl, { name: `${vp}-t${t}`, vp, target: withT(url, t), seekT: t });
   } else {
     await shoot(gl, { name: `${vp}-live`, vp, target: url });
   }
@@ -112,14 +145,14 @@ for (const vp of Object.keys(VIEWPORTS)) {
 await gl.close();
 
 if (degraded) {
-  const noGl = await chromium.launch({ args: NO_GL_ARGS });
+  const noGl = await launch(NO_GL_ARGS);
   await shoot(noGl, { name: 'desktop-no-webgl', vp: 'desktop', target: url });
   await noGl.close();
 }
 
 writeFileSync(join(out, 'manifest.json'), JSON.stringify({ url, capturedAt: new Date().toISOString(), shots }, null, 2));
 for (const s of shots) {
-  const flags = [s.ready ? 'ready' : 'NOT-READY', s.webgl ? `gl:${s.renderer}` : 'no-gl', s.errors.length ? `${s.errors.length} errors` : 'clean'];
+  const flags = [`dpr${s.dpr}`, s.ready ? 'ready' : 'NOT-READY', s.webgl ? `gl:${s.renderer}` : 'no-gl', s.errors.length ? `${s.errors.length} errors` : 'clean'];
   console.log(`${s.name.padEnd(24)} ${flags.join('  ')}${s.stats ? '  stats ' + JSON.stringify(s.stats) : ''}`);
   for (const e of s.errors) console.log(`    error: ${e}`);
 }

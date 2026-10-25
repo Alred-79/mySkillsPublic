@@ -10,7 +10,7 @@ body { margin: 0; font-family: system-ui, sans-serif; background: #0e1412; color
   border-radius: 16px;
   transition: transform 120ms ease-out;
 }
-.tilt-photo { display: block; width: 100%; transform: translateZ(20px); }
+.tilt-photo { display: block; width: 100%; aspect-ratio: 4 / 3; background: linear-gradient(180deg, #f2b27a 0%, #6d7f8c 55%, #2b3a33 100%); transform: translateZ(20px); }
 .tilt-label { position: absolute; bottom: 16px; left: 16px; transform: translateZ(60px); font-weight: 600; }
 
 .badge { width: 96px; height: 96px; }

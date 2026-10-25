@@ -31,24 +31,25 @@ A plain landing page for a fictional bronze foundry, with no three.js, no build 
 
 ## Case 2: laggy-r3f-scene-fix (fixture: laggy-scene)
 
-A small R3F product page for a fictional water bottle, runnable after `npm i && npm run dev`, except `/ridge.jpg`, which any image can stand in for.
+A small R3F product page for a fictional water bottle, runnable after `npm i && npm run dev`.
+Verified 2026-10-24 with `vite build`, `vite preview`, and capture.mjs. It renders with no console errors and shows the seeded look (flat light, everything glowing, a grey ground). It reports NOT-READY because the before-state has no seek clock, which is part of what the skill should add.
 
 ### Seeded defects (recall)
 
 | id | Where | Defect | Expected fix |
 |---|---|---|---|
 | D1 | App.jsx Canvas | `dpr={window.devicePixelRatio}` renders at DPR 3 on many phones | `dpr={[1, 2]}`, 1.5 on mobile, or PerformanceMonitor |
-| D2 | App.jsx lights | `ambientLight` 0.5 plus one directional at 1 and no environment, the washed-out default | Self-hosted environment map, Neutral or AgX tone mapping, one key light |
+| D2 | App.jsx lights and composer | `ambientLight` 0.5 plus one directional at 1 and no environment, the flat default, and an `<EffectComposer>` with no ToneMapping effect, so the scene renders untonemapped (the composer forces the renderer's tone mapping off) | Self-hosted environment map, one key light, and `<ToneMapping mode={ToneMappingMode.NEUTRAL} />` (or AGX) last in the composer. Setting tone mapping on the renderer alone is a no-op here and does not count |
 | D3 | App.jsx Bloom | `luminanceThreshold={0}` makes everything glow | Threshold about 1, the glowing cap `toneMapped={false}` with values above 1 |
 | D4 | App.jsx ground | Real-time shadow map on a grey plane | ContactShadows with `frames={1}` or a baked plane |
-| D5 | App.jsx and ScrollCamera.jsx | `frameloop="demand"` while GSAP mutates the camera and nothing calls `invalidate()`, so the camera freezes | `invalidate()` in the tween's `onUpdate` |
+| D5 | App.jsx and ScrollCamera.jsx | `frameloop="demand"` while GSAP mutates the camera and the backdrop's opacity and nothing calls `invalidate()`, so the camera freezes | `invalidate()` in each tween's `onUpdate`. Switching to `frameloop="always"` hides the bug and does not count |
 | D6 | ScrollCamera.jsx | `camera.lookAt` in `scrollTrigger.onUpdate`, which stops while scrub is still catching up | Derived updates in the tween's `onUpdate` |
 | D7 | App.jsx and ScrollCamera.jsx | OrbitControls with damping and the scroll tween both write the camera | Disable controls during the story, or tween a rig the controls do not own |
 | D8 | Bottle.jsx | `setT` inside useFrame re-renders React every frame | Read time from `state.clock`, no state |
 | D9 | Bottle.jsx | `new THREE.Vector3` inside useFrame allocates every frame | Hoist a temporary and `.set()` it |
 | D10 | Bottle.jsx | `lerp(..., 0.1)` is frame-rate dependent | `1 - Math.exp(-λ * delta)` or `damp` |
-| D11 | glowMaterial.js | `uResolution` in CSS pixels while `gl_FragCoord` is in device pixels, and no `<tonemapping_fragment>` or `<colorspace_fragment>` | Drawing-buffer size updated on resize, plus the includes |
-| D12 | styles.css `.tilt` | `overflow: hidden` on the `preserve-3d` element flattens the translateZ layers | Clip on an inner wrapper |
+| D11 | glowMaterial.js | `uResolution` in CSS pixels while `gl_FragCoord` is in device pixels, so the cap's gradient doubles on DPR 2 screens | Drawing-buffer size (`gl.getDrawingBufferSize`), updated on resize. Adding the tone mapping and color space includes is fine but optional, since under the composer they are no-ops |
+| D12 | styles.css `.tilt` | `overflow: hidden` on the `preserve-3d` element flattens the translateZ layers | Move the clip and radius to the photo layer itself (or a wrapper around the photo alone that carries its translateZ), keeping the photo and label as direct children of `.tilt`. A wrapper around both layers stays flat and does not count |
 | D13 | Badge.jsx | A second `<Canvas>` opens another WebGL context and always-on loop for a 96px badge | drei `View` on the main canvas, or CSS or SVG |
 
 ### Clean decoys (must survive)
@@ -58,7 +59,7 @@ A small R3F product page for a fictional water bottle, runnable after `npm i && 
 | C1 | Bottle.jsx | `THREE.MathUtils.damp(..., 4, delta)` on the cap is frame-rate independent. Its target reads `t`, which changes with D8, but the damping is right |
 | C2 | Bottle.jsx | Geometry and material in `useMemo` are shared correctly |
 | C3 | Bottle.jsx | The price label in drei `<Html>` keeps accessible DOM text |
-| C4 | ScrollCamera.jsx | `transparent = true` is set before tweening opacity |
+| C4 | ScrollCamera.jsx | `transparent = true` is set before tweening the backdrop's opacity (its missing `invalidate()` belongs to D5, not to this row) |
 | C5 | styles.css | The reduced-motion block is correct and should be extended, not removed |
 
 **Scoring.** Recall is the share of D1 to D13 found and fixed. False positives are any C row flagged or broken. A fix that changes the bottle color, copy, or price is a regression.

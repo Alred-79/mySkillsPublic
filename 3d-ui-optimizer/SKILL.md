@@ -1,6 +1,6 @@
 ---
 name: 3d-ui-optimizer
-description: "Build or fix 3D, shader, motion, and interface visuals so they look art-directed and human rather than default, then prove it by rendering them. Finds the signature idea in the client's own material, picks the cheapest technique that lands it (CSS and SVG, small libraries, a drop-in shader, a custom shader, or a full Three.js or React Three Fiber scene), builds it with the art direction, performance rules, and degradation the generated defaults skip, then freezes the animation at exact moments, screenshots it at desktop and mobile and under reduced motion and no WebGL, and measures draw calls and memory before calling it done. Use whenever the user wants a 3D hero or scene, a WebGL or shader effect (liquid-metal logo, animated shader gradient, liquid glass, particles, grain), scroll-driven 3D or GSAP storytelling, a signature animation, or says a scene is slow, janky, flat, or ugly, or wants a component, page, or interaction to feel more polished, alive, or premium. Trigger phrasings: \"add a 3D hero\", \"make our logo liquid metal\", \"animated gradient background\", \"liquid glass nav\", \"this R3F scene is laggy\", \"why does my Three.js scene look flat\", \"make this animation feel better\", \"scroll-driven 3D story\", \"make this UI feel premium\". For a whole-site revamp that needs an intensity interview and a design contract, use revamp-ui, which can route its craft here. Not for backend work."
+description: "Build or fix 3D, shader, motion, and interface visuals so they look art-directed and human rather than default, then prove it by rendering them. Finds the signature idea in the client's own material, picks the cheapest technique that lands it (CSS and SVG, small libraries, a drop-in shader, a custom shader, or a full Three.js or React Three Fiber scene), builds it with the art direction, performance rules, and degradation the generated defaults skip, then freezes the animation at exact moments, screenshots it at desktop and mobile and under reduced motion and no WebGL, and measures draw calls and memory before calling it done. Use whenever the user wants a 3D hero or scene, a WebGL or shader effect (liquid-metal logo, animated shader gradient, liquid glass, particles, grain), scroll-driven 3D or GSAP storytelling, a signature animation, or says a scene is slow, janky, flat, or ugly, or wants one named component or interaction (a button, modal, menu, hover, transition, palette) to feel better. Trigger phrasings: \"add a 3D hero\", \"make our logo liquid metal\", \"animated gradient background\", \"liquid glass nav\", \"this R3F scene is laggy\", \"why does my Three.js scene look flat\", \"make this animation feel better\", \"scroll-driven 3D story\", \"this dropdown feels cheap\". When the request is to redesign, restyle, or modernize a whole existing site or page, or make it feel modern, premium, or alive overall, that is revamp-ui, which can route its craft here. Not for backend work."
 ---
 
 # 3D UI optimizer
@@ -13,7 +13,7 @@ Asked for a 3D hero, a capable model ships a spinning primitive under `ambientLi
 Then it says the result looks great without having seen a single frame.
 Three mechanisms carry this skill, and everything else serves them.
 
-**The idea comes from the subject.** taste-skill's blind study found that pages built from bans alone tied or lost to no skill at all. What won was an idea only this client could own and one live thing. So the signature moment is bound to the client's material, its logo, its product, its data, its process, and the bans run last as a lint.
+**The idea comes from the subject.** In taste-skill's own blind study, its rule-driven builds tied or lost to the no-skill baseline in every round, even with far fewer detector failures. What the jurors rewarded was an idea only this client could own and one live thing. So the signature moment is bound to the client's material, its logo, its product, its data, its process, and the bans run last as a lint.
 
 **The cheapest technique that lands it.** Most signature moments do not need a 3D engine, and the ones that do need the engine's defaults replaced. Choosing the tier is a decision with a recorded reason, not a reflex toward Three.js.
 
@@ -26,7 +26,7 @@ Ceremony scales to the task. A one-line easing fix gets the fix and a Before, Af
 This skill owns the idea, the technique choice, the art direction, the architecture invariants, and the verification.
 It routes deep API detail and adjacent loops instead of repeating them.
 
-- **gsap-skills** for GSAP API detail. **r3f-best-practices** and **three-best-practices** for rule lookup beyond `references/3d-craft.md`. Where they conflict with these references, these win, because they were reconciled against the official docs and the conflicts are listed in 3d-craft.md.
+- **gsap-skills** for GSAP API detail. **r3f-best-practices** and **three-best-practices** for rule lookup beyond `references/3d-craft.md`. Where they conflict, prefer these references, which were checked against the official docs and library source in 2026-10 and list the known conflicts in 3d-craft.md. Version-sensitive rows go stale, so check the library source when a major version changes.
 - **impeccable** and **taste-skill** as lint engines in step 5, when installed. **emil-design-eng** for a deep motion review of a component.
 - **revamp-ui** when the user wants a whole existing site redesigned and the intensity is not settled. Its contract sets how much. This skill decides how.
 - **adversarial-verify** as an optional closer on the `V` ledger.
@@ -56,13 +56,14 @@ One loud moment per page, two or three scenes at most, with quiet sections betwe
 |---|---|---|
 | 0. CSS and SVG | Depth tilt with `preserve-3d`, scroll reveals with `animation-timeline`, View Transitions, `feTurbulence` grain, `backdrop-filter` glass, clip-path reveals | 0KB |
 | 1. Small libraries | Springs and gestures (Motion, React Spring), SVG drawing (Anime.js), Vanilla-Tilt, Zdog, a designer's asset in Rive (stateful) or Lottie (linear) | 5 to 30KB, measure |
-| 2. Drop-in shader | An ambient folded gradient (shadergradient) on a React and R3F stack | three plus R3F, about 150KB gzipped if not already shipping |
+| 2. Drop-in shader | An ambient folded gradient (shadergradient) on a React and R3F stack | three plus R3F, about 235KB gzipped if not already shipping, so load it in a lazy chunk |
 | 3. Custom shader | Effects bound to a logo mask or wordmark, scroll or pointer reactive, or without three on a full-screen triangle | a few KB |
-| 4. Three.js or R3F scene | Real objects, products, configurators, camera stories. Spline when a designer owns the scene, with GLB export as the way out | 150KB and up, plus assets |
+| 4. Three.js or R3F scene | Real objects, products, configurators, camera stories. Spline when a designer owns the scene, with GLB export as the way out | about 235KB gzipped before assets, in a lazy chunk |
 
 Move up a tier only when a still of the higher tier clearly beats the lower one.
 Record the tier and the reason as a `V` row.
-A CSS 3D gotcha catches nearly everyone. `overflow` other than visible, `opacity` below 1, `filter`, or `mask` on the `preserve-3d` element flattens every child layer, so clip on an inner wrapper.
+A CSS 3D gotcha catches nearly everyone. Any grouping property on the `preserve-3d` element flattens every child layer. That means `overflow` other than visible (including `clip`), `opacity` below 1, `filter`, `mask`, `clip-path`, `mix-blend-mode`, and `isolation: isolate`.
+Wrapping the Z-translated layers in a clipping element flattens them too. Clip each flat layer on its own wrapper, translate that wrapper as a unit, and keep the layers as direct children of the `preserve-3d` element.
 
 ### 3. Build with the invariants
 
@@ -72,15 +73,16 @@ These invariants hold at every tier, and they are where generated code reliably 
 - **The first frame is readable.** Headline, sentence, and action are HTML on first paint. The canvas sits over a designed poster and fades in after its first rendered frame. No preloader.
 - **One of each.** One canvas per page, one render loop, one scroll owner, one writer per property.
 - **Nothing per frame that allocates or re-renders.** Refs and hoisted temporaries, never React state. Delta-based damping, `1 - Math.exp(-λ * dt)`.
-- **Render only when something changes.** `frameloop="demand"` with `invalidate()` from tween `onUpdate`, and a pause off screen and in hidden tabs that keeps the clock.
+- **Render only when something changes.** `frameloop="demand"` with `invalidate()` from tween `onUpdate`, and a pause off screen and in hidden tabs that keeps the animation's time. In R3F, `setFrameloop` resets `state.clock` to 0, so animate from your own accumulated time, never `clock.elapsedTime`.
 - **Pixels are budgeted.** DPR capped at 2, at 1.5 on mobile, at 1 for soft gradients. Resolution uniforms in drawing-buffer pixels.
 - **Degradation is designed, not bolted on.** Reduced motion shows a chosen still frame. No WebGL or a lost context shows the poster. Decorative canvases are `aria-hidden` with `pointer-events: none`, and meaning lives in DOM text.
-- **Art direction replaces defaults.** Environment lighting with Neutral or AgX tone mapping, fov 35 to 50, grounded objects, selective bloom, a brand palette, and component motion on the curves and durations in motion.md.
+- **Art direction replaces defaults.** Environment lighting with Neutral or AgX tone mapping (set as the last `<ToneMapping>` effect when a postprocessing composer is mounted, since the composer turns the renderer's off), fov 35 to 50, grounded objects, selective bloom, a brand palette, and component motion on the curves and durations in motion.md.
 
 ### 4. Make it seekable, then look
 
-Drive every time-based visual from `scripts/seek-clock.js`, or for R3F the pattern in 3d-craft.md, so `?t=N` freezes the page at N seconds and sets `window.__ready`, and reduced motion freezes at the designed still.
-GSAP timelines seek with `gsap.globalTimeline.pause().time(t)`, and scroll stories are captured at scroll positions instead.
+Drive every canvas from `scripts/seek-clock.js`, or for R3F the pattern in 3d-craft.md, so `?t=N` freezes the page at N seconds and sets `window.__ready`, and reduced motion freezes at the designed still.
+Pass the clock a `whenReady` promise for every texture, font, or model the frame needs, or the frozen frame is captured without them. A frozen frame redraws itself on resize, and `clock.redraw()` covers anything else that clears the canvas.
+CSS animations, transitions, and Web Animations are seeked by the capture script itself. GSAP timelines seek with `gsap.globalTimeline.pause().time(t)`, Lottie with `goToAndStop(t * 1000)`, and Rive and JS-driven springs need their own pause and seek. Scroll stories are captured at scroll positions instead.
 Expose `window.__stats` with draw calls, triangles, and memory if the page has a renderer.
 
 Then capture with Playwright installed in the project (`npm i -D playwright`).
@@ -89,7 +91,8 @@ Then capture with Playwright installed in the project (`npm i -D playwright`).
 node <skill>/scripts/capture.mjs http://localhost:3000 --t 0,1.2,4 --scroll 0.5,1 --out .evidence/shots
 ```
 
-It shoots desktop 1440 and mobile 390 at DPR 2, each seeked time and scroll position, reduced motion, and a no-WebGL launch, and writes a manifest with console errors, readiness, the WebGL renderer, and the stats.
+It shoots desktop 1440 at DPR 1 and mobile 390 at DPR 2, each seeked time and scroll position, reduced motion, and a no-WebGL launch, and writes a manifest with console errors, readiness, the WebGL renderer, and the stats.
+A page with no seek clock still captures, but every shot waits out `--timeout` and reports NOT-READY, which is itself a finding.
 If a Playwright or preview MCP is available instead, do the same steps through it.
 **Read every image.** Check that the frame shows what you meant (the intended bronze can render teal), that the headline reads over the effect, that mobile is composed rather than cropped, that the reduced-motion and no-WebGL frames look designed, and that t=0 is not blank.
 Use the artifact triage table in effects.md for black, white, or missing output.

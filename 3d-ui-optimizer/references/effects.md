@@ -19,7 +19,7 @@ Recipes are distilled from collidingScopes/liquid-logo, ruucm/shadergradient, da
 Use **CSS or SVG** when the effect is static or slow and ambient, when it is UI chrome, when it must survive reduced motion or no WebGL unchanged, or when there are more than about three instances or the content behind them changes.
 The test is a static screenshot. If the shader version does not clearly beat a CSS gradient in a still, ship the CSS.
 
-Use **a drop-in library** when the stack already runs React with R3F, one hero instance is needed, and a preset family matches. You still owe the hardening checklist, because none of these libraries do it for you. Budget roughly 150KB gzipped for three plus R3F if they are not already shipping.
+Use **a drop-in library** when the stack already runs React with R3F, one hero instance is needed, and a preset family matches. You still owe the hardening checklist, because none of these libraries do it for you. Budget about 235KB gzipped for three plus R3F if they are not already shipping (measured with Vite 6, three 0.175, R3F 9.8), and load them in a lazy chunk.
 
 Use **a custom shader** when the effect must bind to brand material such as a logo mask or a wordmark SDF, when it reacts to scroll or pointer, when it must run without three (one full-screen triangle with vertices `-1,-1, 3,-1, -1,3` and a single `drawArrays` is a few KB), or when a library fights the design.
 
@@ -67,7 +67,7 @@ float alpha = smoothstep(.05, .5, texture2D(u_logo, uv).a);          // not a ha
 Tint toward the brand by changing the color factors, then look at the frame, since a factor that seems warm on paper can render teal.
 **Cheap values.** Noise above about 2, iterations under 8, color factors past ±1.5.
 
-**Fixes over the source.** Anti-alias the mask with `smoothstep` or an SDF of the logo instead of a hard alpha discard. Clamp the ratio before tanh, since it overflows to NaN when energy nears 0. Cap DPR and pause off screen, which the source never does. Marks under about 120px turn to noise, so use a static render there.
+**Fixes over the source.** Pass the logo texture's load promise to seek-clock's `whenReady`, or the frozen and reduced-motion frames capture the plasma with no mark in it. Anti-alias the mask with `smoothstep` or an SDF of the logo instead of a hard alpha discard. Clamp the ratio before tanh, since it overflows to NaN when energy nears 0. Cap DPR and pause off screen, which the source never does. Marks under about 120px turn to noise, so use a static render there.
 
 **License.** The repo is MIT, but its core loop comes from XorDev's Plasma shader, which has no stated license. Rewrite the loop from the mechanism and credit both.
 
@@ -134,7 +134,8 @@ Mask with `1 - smoothstep(-1, 1, sdf)`. Defaults edge 0.01, rim 0.05, ripple at 
 
 | You see | Likely cause |
 |---|---|
-| Black canvas | Shader compile error. Read the console |
+| Black canvas | Shader compile error, so read the console. If the console is clean and only frozen or reduced-motion frames are blank, the canvas was cleared by a resize after its one draw |
+| Frozen frame missing a logo or texture | The asset arrived after the frame. Pass its promise to `whenReady` |
 | White or garbage pixels | NaN from `pow` or `log` of a negative, or a divide by zero |
 | Objects vanish | NaN positions, or a stale bounding sphere on an instanced mesh |
 | Particles stacked at the origin | Random seed not wired |

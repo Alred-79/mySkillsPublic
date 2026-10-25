@@ -2,7 +2,7 @@
 
 Load this for any page or component, with or without 3D.
 The moves come from taste-skill's blind study and critique notes, impeccable's references and detector, and emil-design-eng, read 2026-10-24.
-The finding that orders this file is taste-skill's own result. Pages built from bans alone tied or lost to no skill at all (6.9 against 7.9 on unseen briefs), while the judges rewarded an idea that belonged to the client, one live thing, full content at a readable size, and one dominant element on the first screen.
+The finding that orders this file is taste-skill's own result. Its rule-driven builds tied or lost to the no-skill baseline in every round (6.9 against 7.9 on unseen briefs) despite far fewer detector failures, while the jurors rewarded an idea that belonged to the client, one live thing, full content at a readable size, and one dominant element on the first screen.
 So the constructive moves come first and the bans run last, as a lint.
 
 ## Contents
@@ -50,9 +50,9 @@ Section gaps run 120 to 240px on brand pages and 48 to 96px in product UI.
 - Surfaces separate from the ground by a 2 to 6 point lightness step, not by lines or shadows.
 - Accent stays under 5 percent of any screen, about 3 percent on app screens. A committed or drenched brand color belongs to one deliberate hero, not the whole site.
 - Change the section color per chapter with hard cuts, and neighboring colors differ in lightness.
-- `#6b6b6b` is the lightest gray that passes 4.5:1 on white.
+- `#767676` is the lightest gray that passes 4.5:1 on white (4.54:1). `#777777` fails at 4.48:1.
 - One hue per chart where possible. Over 4 hues warns, over 6 fails.
-- Buttons are square or pill, decided once. In the study 52 percent of top sites used square, while 59 percent of weak sites used pill, and the 9 to 16px soft radius was the weak-site default. Picture corners are square.
+- Buttons are square or pill, decided once. In the study 52 percent of top sites used square buttons, while 59 percent of weak sites used pill, so pill is the weak-site default and a medium soft radius came second. Picture corners are square.
 
 ## Variety across projects
 

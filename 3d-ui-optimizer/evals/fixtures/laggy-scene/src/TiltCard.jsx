@@ -10,7 +10,7 @@ export default function TiltCard() {
   };
   return (
     <div ref={ref} className="tilt" onPointerMove={onMove}>
-      <img className="tilt-photo" src="/ridge.jpg" alt="The Besseggen ridge at dawn" />
+      <div className="tilt-photo" role="img" aria-label="The Besseggen ridge at dawn" />
       <div className="tilt-label">Tested on Besseggen</div>
     </div>
   );
