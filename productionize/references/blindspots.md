@@ -1,6 +1,6 @@
 # Blindspots catalog
 
-The thirteen operational failure modes frontier LLMs miss on a first pass, each with the concrete check and its evidence.
+The thirteen operational failure modes frontier LLMs miss on a first pass, each with the concrete check and its evidence. B14-B17 (caching, replica reads, write skew, averaged percentiles) continue in `data-and-state.md`.
 SKILL.md runs the checks; this file holds the anchors you recite to the user and the reasoning behind each check.
 Cite from here by check ID (B1..B13), never by copying prose into `expected.md` or a report.
 
@@ -152,6 +152,7 @@ Sane starting formula: connections ≈ cores × 2 + effective_spindle_count.
 **Check.** Verify the code's concurrency assumptions against what the database engine *actually* provides at its configured isolation level. The default is usually weaker than developers assume.
 Where a read-modify-write needs protection, require `SELECT ... FOR UPDATE` or a version/optimistic-lock column.
 Check `fsync` / write-concern settings against any durability claim the code or docs make.
+This covers the single-row lost update. Invariants that span rows (write skew) are B16 in `data-and-state.md`; `FOR UPDATE` fixes those only when every row the check depends on already exists.
 
 **Why it matters.** "REPEATABLE READ" does not mean what the name implies, and a lost update looks exactly like correct code until two writers collide in production.
 

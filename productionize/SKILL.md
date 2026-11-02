@@ -1,6 +1,6 @@
 ---
 name: productionize
-description: "Take a working codebase to production-grade. Audits for the operational failure modes frontier LLMs demonstrably miss (retry amplification across layers, DB-pinging liveness probes, lock-queue-blocking migrations, dual writes, exit-now SIGTERM handlers, unbounded queues, stale feature flags, oversized pools), applies prioritized fixes, and generates operational artifacts wired to the real code: runbooks, alert thresholds, and pre-committed rollback triggers. Use this whenever the user asks \"is this production ready\", \"productionize this\", \"harden for prod\", \"will this survive real traffic\", \"we launch next week, is X ready\", or otherwise wants a working service made operationally safe. Distinct from source-security/correctness review, which it routes to code-audit rather than duplicating."
+description: "Take a working codebase to production-grade. Audits for the operational failure modes frontier LLMs demonstrably miss (retry amplification across layers, DB-pinging liveness probes, lock-queue-blocking migrations, dual writes, exit-now SIGTERM handlers, unbounded queues, stale feature flags, oversized pools, cache fill races and stampedes, reads routed to lagging replicas, write skew, averaged percentiles), applies prioritized fixes, and generates operational artifacts wired to the real code: runbooks, alert thresholds, and pre-committed rollback triggers. Use this whenever the user asks \"is this production ready\", \"productionize this\", \"harden for prod\", \"will this survive real traffic\", \"we launch next week, is X ready\", or otherwise wants a working service made operationally safe. Distinct from source-security/correctness review, which it routes to code-audit rather than duplicating."
 ---
 
 # Productionize
@@ -51,11 +51,15 @@ Single source of tier truth. Where prose elsewhere disagrees, this matrix wins.
 | B11 Cert inventory | skip | inventory | inventory + renewal automation check |
 | B12 Flag debt | flag only | audit + fix | audit + fix |
 | B13 Observability | logging pass | logging + metrics + shared-fate | full, incl. dashboards-fate audit |
+| B14 Cache fill races / stampedes | flag only | audit + fix | audit + fix + hot-key expiry demonstration |
+| B15 Reads outrunning replication | skip | audit + fix | audit + fix + lagged-replica demonstration |
+| B16 Write skew | skip | flag | audit + fix + concurrent-transaction demonstration |
+| B17 Averaged percentiles | flag only | audit + fix | audit + fix |
 | Runbooks / alerts / rollback triggers | skip | generate | generate + deploy≠release + rehearsal |
 
 ## Phase 1 - Blindspot audit
 
-Run the checks the matrix calls for at the chosen tier. Each is one concrete action; the full evidence, math, and citations live in `references/blindspots.md`. Read it when you run a check so you can recite the anchor to the user. Emit a `P` row per finding with a `risk` (consequence × likelihood).
+Run the checks the matrix calls for at the chosen tier. Each is one concrete action; the full evidence, math, and citations live in `references/blindspots.md` (B1-B13) and `references/data-and-state.md` (B14-B17). Read the relevant file when you run a check so you can recite the anchor to the user. Emit a `P` row per finding with a `risk` (consequence × likelihood).
 
 1. **B1 Retry amplification.** Grep every retry site (mesh, client libs, SDKs, HTTP clients, queue consumers, DB drivers). Flag missing jitter, missing caps, no budget, and >1 layer retrying the same call path. Models *add* retries; they never audit them.
 2. **B2 Sustaining loops.** Enumerate every load-begets-load path: unbounded queues, work accepted past the client deadline, error paths costlier than success paths, warm-cache dependence.
@@ -70,6 +74,10 @@ Run the checks the matrix calls for at the chosen tier. Each is one concrete act
 11. **B11 Cert inventory.** Enumerate all certs **including internal mTLS/signing certs**, with expiry + renewal automation. The outage-makers are the internal ones nobody monitors.
 12. **B12 Flag debt.** Find stale flags, repurposed flags, dead code reachable via config. Every flag needs an owner and expiry.
 13. **B13 Observability.** Do dashboards/telemetry depend on the thing they monitor (shared fate)? Then a **forced** logging pass: structured logs, correlation IDs, golden-signal metrics. Forced because agents under-log in 58% of repos and ignore explicit logging instructions 67% of the time, so a soft "add logging" does not survive.
+14. **B14 Cache fill races and stampedes.** For every get/miss/read/set path: can an invalidation land between the DB read and the `set`? Does one hot key's expiry send every caller to the DB? Require conditional fills (lease, or version CAS against a tombstone) and single-flight. Jitter doesn't fix one hot key.
+15. **B15 Reads outrunning replication.** Find reads served by replicas or eventually consistent stores, then the write-then-read flows that hit them. Require primary pinning, LSN-gated replica reads, or consistent levels on both write and read.
+16. **B16 Write skew.** List invariants that span rows. App-code check-then-write breaks them at `READ COMMITTED` and `REPEATABLE READ`; `FOR UPDATE` can't lock an absence. Require a DB constraint, `SERIALIZABLE` on every writer, or a lock row every writer takes.
+17. **B17 Averaged percentiles.** Grep dashboards, alerts, and SLOs for averaged percentiles or fleet-wide summaries. Require histograms aggregated before `histogram_quantile`.
 
 **Then the three system-level questions** LLMs never ask, answered in writing as `P` rows (per the matrix: (b) always; (a) and (c) at standard+):
 (a) list every load-begets-load feedback loop; (b) what happens at cold start under full load (cache 0%, all clients reconnecting, pools empty); (c) which reliability automation (retries, failover, autoscaling, health checks, config pipelines) can itself remove capacity or amplify load.
@@ -91,7 +99,7 @@ Rank findings by consequence × likelihood (the `risk` field). Apply smallest-bl
 Generate from the actual code, never from templates with plausible values. Templates and the provenance gate live in `references/artifacts.md`.
 
 - **Runbooks** for won't-start / dependency-down / rollback, with the repo's real commands and real dependency names.
-- **Alert definitions** with thresholds tied to the limits the audit established (pool exhaustion, replication lag, cert-expiry windows), not round numbers.
+- **Alert definitions** with thresholds tied to the limits the audit established (pool exhaustion, replication lag, cert-expiry windows), not round numbers. Latency alerts never average percentiles (B17).
 - **Pre-committed rollback triggers**: "roll back if X within Y minutes," decided before deploy, not during the incident.
 - `critical` adds: deploy≠release separation check (via flags), and migration-rollback rehearsal steps.
 
