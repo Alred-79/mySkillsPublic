@@ -3,14 +3,14 @@
 Status: approved design, pre-implementation
 Applies to: all skills in this repo (adversarial-verify, fix-issue, revamp-ui, statistician,
 microworld, productionize, cost-optimizer, better-tools, skill-sourcer, explain-changes,
-3d-ui-optimizer)
+3d-ui-optimizer, learn-ledger)
 
 Assertion `id` prefixes registered: `A` claims (adversarial-verify), `H` hypotheses
 (fix-issue), `D` dials/contract terms (revamp-ui, statistician tier), `M` microworld
 capture/check rows, `P` productionize findings/fixes/demonstrations, `C` cost-optimizer
 findings/estimates, `T` better-tools recommendations, `S` skill-sourcer recommendations,
 `E` explain-changes brief claims, `V` 3d-ui-optimizer visual claims (tier choice, captured
-frames, measured counts).
+frames, measured counts), `L` learn-ledger taught propositions and revealed check-mode keys.
 
 ## Why this exists
 
@@ -64,6 +64,7 @@ Rules all skills follow:
 | verifier calibration log | adversarial-verify | adversarial-verify (tunes skepticism) | claims that passed verification but later proved wrong |
 | dataset gotchas (repo-level, `data-gotchas.md`) | statistician Phase 1/4 | statistician Phase 0 (grepped at start) | per-dataset traps confirmed once (grain, timezone, key duplication, definition quirks) |
 | microworld ledger rows (prefix `M`, working repo's ledger) | microworld capture/check | adversarial-verify (audits artifact claims; `cannot_claim` seeds the unverified surface) | isolation receipt, freshness hashes (expiry = on source/dep/runtime change), check gate results |
+| learn-ledger store (user-level, `~/.learn-ledger/`, `L` rows via `ll.py ledger`) | learn-ledger `ll.py` only | learn-ledger `status` and `due`; adversarial-verify audits the `L` rows | append-only event log, sealed keys, witnessed answers, propositions and chains. Person-owned rather than repo-owned, the one deliberate exception to rule 4 |
 
 Skill-local artifacts (NOT assertion ledgers, by design): statistician's implicit-test
 counter and forking-paths deviation log are counts/logs, not assertions - they live
@@ -101,6 +102,9 @@ pressure tests from the RED phase, kept):
   not rank high), an abandoned skill, a hallucinated/nonexistent repo, a typosquatted owner,
   and four malicious skills (literal `curl | bash`, packed/obfuscated, prose prompt-injection,
   and a sandbox-aware skill that behaves in a trial - the trial must never clear it).
+- learn-ledger: forged event logs for every level and schedule rule, a seeded review store
+  with a hand-computed due queue, a commit whose chat history carries a canary that must
+  never reach the examiner, and simulated learners with one exact seeded misconception.
 - explain-changes: a small repo plus a seeded change delivered as a patch, with an
   intent-parrot trap (the commit subject claims a behavior the diff does not add), a
   cross-file blast-radius split (one call site the change reaches, one it does not), a

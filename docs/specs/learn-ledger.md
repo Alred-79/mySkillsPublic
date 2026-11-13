@@ -1,6 +1,6 @@
 # Spec: learn-ledger
 
-Status: approved design, pre-implementation. Designed 2026-11-13 from a brief plus one prior adversarial review, whose findings are folded in as constraints.
+Status: built 2026-11-13. Skill, `ll.py`, script tests (59 passing) and eval fixtures are in `learn-ledger/`, one sonnet smoke run of `teach-closures` passed every mechanical row, and the full with-skill and baseline benchmark has not been run. Designed 2026-11-13 from a brief plus one prior adversarial review, whose findings are folded in as constraints.
 Adversarially reviewed 2026-11-13 against the hooks, skills and subagents docs, a local hook experiment on Claude Code 2.1.322, and the cited papers; all 17 findings resolved in this revision, with dated notes where the design moved.
 Depends on: [evidence-protocol.md](evidence-protocol.md)
 Siblings: [microworld.md](microworld.md) (deep trace-grounded tier it hands off to), [explain-changes.md](explain-changes.md) (tells a reviewer about a change, where this skill tests the human on it), [adversarial-verify.md](adversarial-verify.md) (audits what this skill taught).
@@ -179,6 +179,7 @@ If more than one prompt was witnessed since the pose, it lists them and requires
 Review notes 2026-11-13, each from the hooks docs or a local experiment on Claude Code 2.1.322.
 The draft took the first prompt after the pose, but a learner's clarifying question comes first, and `UserPromptSubmit` also fires for background subagent reports, scheduled tasks and cross-session messages, so no background subagent runs while a question is open.
 `${CLAUDE_SKILL_DIR}` is not substituted in frontmatter hook commands, so the hook command finds `ll.py` by probing `$CLAUDE_PLUGIN_ROOT`, `$CLAUDE_PROJECT_DIR/.claude/skills/learn-ledger` and `~/.claude/skills/learn-ledger`, and exits 0 silently if none exists, so it never blocks a prompt.
+The hook never records a slash command, since a live build run credited the `/learn-ledger status` invocation itself as the learner's answer.
 Skill hooks do not survive `--resume` or a restart (a second `-p --resume` turn fired nothing, while a second turn in the same process did), so after a resume the model re-invokes the skill before posing, and `answer --from-witness` with no record since the pose fails with that instruction rather than guessing.
 Confidence is parsed from a trailing `@NN` (percent sure), `idk` or a lone `?` means don't-know with no confidence, and a missing confidence is null, never zero.
 **Fallback transcript check.** If no witness exists (hooks disabled by policy, say), `answer --text` is accepted but marked `pending`, and `ll.py verify` later looks for that text as a user message in `~/.claude/projects/<project-slug>/<session>.jsonl` after the pose time.
@@ -212,6 +213,7 @@ The `session` field comes from `CLAUDE_CODE_SESSION_ID`, which Claude Code sets 
 | `seal` | `qid`, `node`, `kind`, `sha256`, `prompt_hash`, `repo`, `rev` |
 | `pose` | `qid` |
 | `answer` | `qid`, `text`, `confidence`, `dont_know`, `witness` (`hook`, `pending`, `witnessed`, `unwitnessed`), one per hint rung |
+| `verify` | `qid`, `answer`, `witness`, settling a pending `--text` answer from the transcript |
 | `reveal` | `qid`, `hash_ok` |
 | `grade` | `qid`, `verdict` (`pass`, `partial`, `fail`), `miss_class` (`cue`, `discrimination`, `execution`, `careless`, `structural`), `wrong_model`, `hint_max` (0 to 5) |
 | `dispute` | `qid`, `reason` |
@@ -236,9 +238,9 @@ K5 evaluate and create, an edge case plus a teach-back graded against a sealed r
 
 **Review rule** (`ll.py due`).
 1. An item is a pair (node, k) with at least one qualifying pass.
-2. Walk the item's attempts in time order with `n = 0` and an anchor day. `LADDER = [1, 3, 7, 16, 35, 75]` days, configurable, and `interval(n) = LADDER[min(n, 5)]`.
+2. Walk the item's attempts in time order with `n = 0` and no anchor day yet. `LADDER = [1, 3, 7, 16, 35, 75]` days, configurable, and `interval(n) = LADDER[min(n, 5)]`.
 3. Any attempt that is not a qualifying pass (a fail, partial, don't-know, or a pass needing rung R3 or more or left unwitnessed) sets `n = 0` and the anchor to its day.
-4. A qualifying pass at least `ceil(interval(n) / 2)` days after the anchor raises `n` by one and moves the anchor to its day. An earlier one is logged but changes nothing, so cramming cannot game the schedule.
+4. A qualifying pass with no anchor yet, or at least `ceil(interval(n) / 2)` days after the anchor, raises `n` by one and moves the anchor to its day. An earlier one is logged but changes nothing, so cramming cannot game the schedule.
 5. `due_day = anchor + interval(n)`, and the item is due when `today >= due_day`.
 The draft counted passes against an interval that itself depended on the count, and let a heavily hinted pass push the next review out by a full interval (review note 2026-11-13).
 6. Weakest first is a sort on, in order, last verdict non-passing, lower `n`, lower k, more chains using the node as a premise, older last attempt.

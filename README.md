@@ -77,7 +77,12 @@ Where an explainer narrates what code does or simulates it, this turns a real Py
 It is the deep tier you escalate to from explain-changes when a brief is not enough and you want to watch the code run, grounded in what actually executed rather than what the tests claim.
 Its eval seeds a Python repo with a surprising behavior next to a nondeterministic decoy that must fail capture, and scores grounding every value in a real deterministic trace and rejecting what it cannot capture.
 
-explain-changes, microworld, and adversarial-verify form one pipeline. explain-changes briefs any change you ship, microworld lets you inhabit the ones worth a closer look, and adversarial-verify blind-audits the claims of either, so the deeper you go the harder the check.
+**[learn-ledger](learn-ledger/).**
+Where Jane Street's socratic-tutor judges your level in its own context and learning-opportunities offers an exercise after a commit and keeps no record, this seals every answer key before it asks, captures what you actually typed through a hook, and lets only a script turn those graded answers into levels and a spaced review schedule, so the tutor can never declare you've mastered something.
+It covers learning while coding with AI too, with an examiner subagent that quizzes you on a commit having seen only the diff, never the chat, plus a rate-limited offer after real commits and an Obsidian view generated from the log.
+Its eval seeds a learner with one exact misconception, a commit whose chat history carries a canary sentence that must never reach the examiner, and a review store with a hand-computed due queue, and it scores sealed-before-asked, credit only for answers the learner really sent, and no mastery claim the script did not print.
+
+explain-changes, microworld, and adversarial-verify form one pipeline. explain-changes briefs any change you ship, microworld lets you inhabit the ones worth a closer look, and adversarial-verify blind-audits the claims of either, so the deeper you go the harder the check. learn-ledger then tests you on what they explained, so the understanding stays with you rather than with the agent.
 
 ## Install
 
