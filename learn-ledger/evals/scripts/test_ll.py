@@ -332,6 +332,19 @@ class Witness(unittest.TestCase):
             self.s.run("grade", q, "--verdict", "pass", LL_NOW=t)
         self.assertTrue(kind_met(self.s, "K1"))
 
+    def test_teaching_just_before_midnight_still_makes_k1_warm(self):
+        def k1_pass(t, i):
+            q = self.s.seal(question=f"Recall {i}?", kind="K1", LL_NOW=t)
+            self.s.run("pose", q, LL_NOW=t)
+            self.s.witness("42", LL_NOW=t)
+            self.s.run("answer", q, "--from-witness", LL_NOW=t)
+            self.s.run("reveal", q, LL_NOW=t)
+            self.s.run("grade", q, "--verdict", "pass", LL_NOW=t)
+        k1_pass("2026-03-10T09:00:00-05:00", 1)  # cold
+        self.s.run("teach", "--node", "n", "--file", "-", stdin="a step on n", LL_NOW="2026-03-10T23:50:00-05:00")
+        k1_pass("2026-03-11T00:05:00-05:00", 2)  # 15 minutes after teaching, so warm despite the new day
+        self.assertFalse(kind_met(self.s, "K1"))
+
     def test_hook_never_fails_on_bad_input(self):
         r = self.s.run("hook", "witness", stdin="not json")
         self.assertEqual((r.returncode, r.stdout), (0, ""))

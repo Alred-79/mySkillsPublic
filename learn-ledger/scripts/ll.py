@@ -298,10 +298,11 @@ def build_attempts(evs: list[dict]) -> dict[str, Attempt]:
 
 
 def is_cold(a: Attempt, evs: list[dict], seals: dict[str, dict]) -> bool:
-    """No teach on the node and no reveal of another question on the node earlier the same session and day."""
+    """No teach on the node and no reveal of another question on the node in the 12 hours before the pose."""
     p = a.pose
+    pose_t = parse_ts(p["ts"])
     for e in evs[: p["_i"]]:
-        if e.get("session") != p.get("session") or e.get("day") != p.get("day"):
+        if pose_t - parse_ts(e["ts"]) > dt.timedelta(hours=12):
             continue
         if e["type"] == "teach" and e.get("node") == a.node:
             return False

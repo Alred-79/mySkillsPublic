@@ -1,8 +1,8 @@
 # Spec: learn-ledger
 
-Status: built 2026-11-13. Skill, `ll.py`, script tests (66 passing) and eval fixtures are in `learn-ledger/`, one sonnet smoke run of `teach-closures` passed every mechanical row, and the full with-skill and baseline benchmark has not been run. Designed 2026-11-13 from a brief plus one prior adversarial review, whose findings are folded in as constraints.
+Status: built 2026-11-13. Skill, `ll.py`, script tests (67 passing) and eval fixtures are in `learn-ledger/`, one sonnet smoke run of `teach-closures` passed every mechanical row, and the full with-skill and baseline benchmark has not been run. Designed 2026-11-13 from a brief plus one prior adversarial review, whose findings are folded in as constraints.
 Adversarially reviewed 2026-11-13 against the hooks, skills and subagents docs, a local hook experiment on Claude Code 2.1.322, and the cited papers; all 17 findings resolved in this revision, with dated notes where the design moved.
-Reviewed again 2026-11-13 after the build; six defects fixed (hint rungs derived from retries, witness bound to its qid, cold recall per day, unclosable questions closed, dispute pointer, short-answer verify) and `references/ledger.md` and `prop similar` cut.
+Reviewed again 2026-11-13 after the build; six defects fixed (hint rungs derived from retries, witness bound to its qid, cold recall by a 12-hour window, unclosable questions closed, dispute pointer, short-answer verify) and `references/ledger.md` and `prop similar` cut.
 Depends on: [evidence-protocol.md](evidence-protocol.md)
 Siblings: [microworld.md](microworld.md) (deep trace-grounded tier it hands off to), [explain-changes.md](explain-changes.md) (tells a reviewer about a change, where this skill tests the human on it), [adversarial-verify.md](adversarial-verify.md) (audits what this skill taught).
 Name checked 2026-11-13. `npx skills find learn-ledger` and a GitHub code search for `"name: learn-ledger"` returned no such skill, and `learn`, `keep-learning` and `understudy` are taken.
@@ -230,7 +230,7 @@ K5 evaluate and create, an edge case plus a teach-back graded against a sealed r
 
 **Level rule** (`ll.py levels`, per node).
 1. An attempt is a `seal`, `pose`, `answer`, `grade` chain for one `qid` in valid order, judged on its last answer. Disputed attempts are dropped.
-2. An attempt is *cold* when no `teach` event on its node and no `reveal` of another question on its node occurred earlier in the same session on the same day.
+2. An attempt is *cold* when no `teach` event on its node and no `reveal` of another question on its node occurred in the 12 hours before its pose, in any session.
 3. An attempt *qualifies* for kind k when its verdict is `pass`, its answer is `witnessed` or `hook`, it is not don't-know, `hint_max` is at most 2, and, for K1 only, it is cold.
 4. For each kind k, take the attempts after the most recent non-passing attempt of kind k (fail, partial or don't-know), witnessed or not, since a miss is evidence whoever typed it. Kind k is *met* when at least 2 of those qualify, on distinct `prompt_hash` values, spanning at least 2 distinct local days.
 5. `level = max L in 0..5 such that kinds 1..L are all met`, else 0.
