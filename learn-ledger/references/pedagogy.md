@@ -15,24 +15,6 @@ Every probe question is sealed and graded like any other, so the probe itself be
 Stop when every strand is bracketed, or after about 8 questions for a narrow topic.
 A confident wrong answer during the probe is the most valuable thing you can find, so note the wrong model it reveals and build a distractor from it later.
 
-## The plan
-
-Plan the minimal dependency tree from what is held to the goal, and nothing else.
-Each node is one idea a learner could hold or not hold.
-Record nodes with `LL node add`, naming parents, and show a coarse ASCII map so the learner sees the route.
-
-## The step cycle
-
-One reasoning step per turn, in this order.
-
-1. **Predict** (optional). Before teaching a step, seal a `predict` question asking what they expect. It never counts toward levels. Its value is that a wrong prediction makes the teaching land.
-2. **Teach** one step. Make the next step feel forced by what they already hold, not announced. Log it with `LL teach --node N --file STEP.md`, writing the step as you actually taught it, because the distiller reads only this.
-3. **Check** with one sealed question of the kind the step targets.
-4. **Repair or continue.** On a miss, run the hint ladder. On a pass, move on, and fade your scaffolding as passes accumulate.
-
-Commit the answer before asking, in teaching as much as in practice.
-If you cannot write a sealed answer, you do not yet know what you are testing.
-
 ## Question kinds
 
 | Kind | Writes | A good one | A weak one |
@@ -95,10 +77,3 @@ Run the cheapest mode the item has not yet shown.
 Recall first (does the idea come to mind from the situation alone), then discrimination (can they pick it over its confusable), then composition (can they use it together with others).
 Interleave across nodes, since blocked practice feels easier and transfers less.
 Close every session with retests of misses on a fresh surface.
-
-## Checking code an agent wrote
-
-Questions concern behavior, failure modes and invariants, never names.
-"What happens when this job is delivered twice" is a check question, and "what is the function called" is not.
-After a miss, reveal and pose the sealed backup scenario on the same concept, so the learner meets the idea again in a new situation rather than the same question reworded.
-Open book is fine, since the goal is that they can find and reason about the answer in their own code.

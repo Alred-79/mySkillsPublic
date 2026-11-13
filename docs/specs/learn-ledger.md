@@ -1,7 +1,8 @@
 # Spec: learn-ledger
 
-Status: built 2026-11-13. Skill, `ll.py`, script tests (59 passing) and eval fixtures are in `learn-ledger/`, one sonnet smoke run of `teach-closures` passed every mechanical row, and the full with-skill and baseline benchmark has not been run. Designed 2026-11-13 from a brief plus one prior adversarial review, whose findings are folded in as constraints.
+Status: built 2026-11-13. Skill, `ll.py`, script tests (66 passing) and eval fixtures are in `learn-ledger/`, one sonnet smoke run of `teach-closures` passed every mechanical row, and the full with-skill and baseline benchmark has not been run. Designed 2026-11-13 from a brief plus one prior adversarial review, whose findings are folded in as constraints.
 Adversarially reviewed 2026-11-13 against the hooks, skills and subagents docs, a local hook experiment on Claude Code 2.1.322, and the cited papers; all 17 findings resolved in this revision, with dated notes where the design moved.
+Reviewed again 2026-11-13 after the build; six defects fixed (hint rungs derived from retries, witness bound to its qid, cold recall per day, unclosable questions closed, dispute pointer, short-answer verify) and `references/ledger.md` and `prop similar` cut.
 Depends on: [evidence-protocol.md](evidence-protocol.md)
 Siblings: [microworld.md](microworld.md) (deep trace-grounded tier it hands off to), [explain-changes.md](explain-changes.md) (tells a reviewer about a change, where this skill tests the human on it), [adversarial-verify.md](adversarial-verify.md) (audits what this skill taught).
 Name checked 2026-11-13. `npx skills find learn-ledger` and a GitHub code search for `"name: learn-ledger"` returned no such skill, and `learn`, `keep-learning` and `understudy` are taken.
@@ -73,7 +74,6 @@ Code the learner writes there lands in the next diff, so check mode quizzes it f
 learn-ledger/
   SKILL.md                  # modes, non-negotiables, commands. Target 3,500 tokens, hard cap 5,000
   references/pedagogy.md    # probe, step cycle, question kinds, hint ladder, practice modes, confidence reading
-  references/ledger.md      # event schema, level and review rules, export layout, for humans and the builder
   agents/examiner.md        # check-mode question writer (Read, Grep, Glob, Bash for git and ll.py only)
   agents/distiller.md       # turns logged teach steps into propositions and chains
   scripts/ll.py             # stdlib Python 3.10+, the only writer of the store
@@ -126,7 +126,7 @@ seal (answer, wrong models or rubric, hash) -> pose (question shown, message end
 -> answer --from-witness -> reveal (hash rechecked) -> [hint rung -> learner replies -> answer]* -> grade -> next
 ```
 
-A qid may take several `answer` events after its reveal, one per hint rung, and `grade` grades the last one with `hint_max` at least the highest rung given.
+A qid may take several `answer` events after its reveal, one per hint rung, and `grade` grades the last one. The script derives `hint_max` from the retries (the second answer follows R0), and a "just tell me" answer is rung 5.
 The earlier draft allowed one answer per qid, which left no legal path for the hint ladder (review note 2026-11-13).
 
 **Teach.**
@@ -173,8 +173,8 @@ In check mode `seal` prints only qids and question text, and the main thread is 
 It does not guarantee the key is correct (dispute and adversarial-verify cover that), it does not stop lenient grading against a correct key, and a model that skips the script entirely produces no credit rather than false credit.
 
 **Witness.** SKILL.md declares a skill-scoped `UserPromptSubmit` hook (`ll.py hook witness`), registered when the skill is invoked and kept for the rest of that Claude Code process.
-While a question is posed and ungraded in that session, it appends the prompt's text, `session_id` and timestamp to `witness.jsonl`, and otherwise it writes nothing, so unrelated prompts never reach the store.
-`ll.py answer QID --from-witness` takes the latest witnessed prompt in the same session after the pose, so the model never transcribes the learner's answer.
+While a question is posed today, ungraded and with no failed hash check in that session, it appends the prompt's text, `session_id` and timestamp to `witness.jsonl`, and otherwise it writes nothing, so unrelated prompts never reach the store.
+`ll.py answer QID --from-witness` takes the latest prompt witnessed for that qid in the same session after the pose, so the model never transcribes the learner's answer.
 If more than one prompt was witnessed since the pose, it lists them and requires `--witness ID`, and the text is still copied from the record.
 Review notes 2026-11-13, each from the hooks docs or a local experiment on Claude Code 2.1.322.
 The draft took the first prompt after the pose, but a learner's clarifying question comes first, and `UserPromptSubmit` also fires for background subagent reports, scheduled tasks and cross-session messages, so no background subagent runs while a question is open.
@@ -230,7 +230,7 @@ K5 evaluate and create, an edge case plus a teach-back graded against a sealed r
 
 **Level rule** (`ll.py levels`, per node).
 1. An attempt is a `seal`, `pose`, `answer`, `grade` chain for one `qid` in valid order, judged on its last answer. Disputed attempts are dropped.
-2. An attempt is *cold* when no `teach` event on its node and no `reveal` of another question on its node occurred earlier in the same session.
+2. An attempt is *cold* when no `teach` event on its node and no `reveal` of another question on its node occurred earlier in the same session on the same day.
 3. An attempt *qualifies* for kind k when its verdict is `pass`, its answer is `witnessed` or `hook`, it is not don't-know, `hint_max` is at most 2, and, for K1 only, it is cold.
 4. For each kind k, take the attempts after the most recent non-passing attempt of kind k (fail, partial or don't-know), witnessed or not, since a miss is evidence whoever typed it. Kind k is *met* when at least 2 of those qualify, on distinct `prompt_hash` values, spanning at least 2 distinct local days.
 5. `level = max L in 0..5 such that kinds 1..L are all met`, else 0.
@@ -250,7 +250,7 @@ The draft counted passes against an interval that itself depended on the count, 
 **Propositions and chains.** One line per assertion with `id`, `topic`, `statement`, `aliases`, `source` (URL with access date, `file:line@rev`, or `model-asserted`), and `provenance` (event ids).
 Chains carry `premises` (all used together), `conclusion`, and `provenance`.
 Merging follows LearnHarness's documented rule (first line for an id defines it, provenance unions), restated in our own words.
-**Dedup.** `ll.py prop similar "<statement>"` returns existing statements above a normalized token-overlap threshold (default 0.8), and the distiller must merge into an existing id or explain why the new one differs.
+**Dedup.** `ll.py prop add` refuses a statement above a normalized token-overlap threshold (default 0.8) with an existing one, and the distiller must merge into that id or pass `--force` with the reason the new one differs.
 
 **`L` assertion rows.** `ll.py ledger --topic T` renders propositions and the committed answers of revealed check-mode questions in the evidence-protocol table, never an unrevealed key such as an unused backup scenario.
 A cited `file:line@rev` verified by `snippet` is `verified`, `model-asserted` is `unverifiable`, a disputed one is `disputed`, and version-sensitive facts carry an `expiry`.
@@ -287,12 +287,12 @@ ll.py seal --node N --kind K < packet.json    # many packets accepted, prints qi
 ll.py pose QID
 ll.py answer QID (--from-witness [--witness W] | --text S)
 ll.py reveal QID
-ll.py grade QID --verdict V [--miss-class C] [--wrong-model W] [--hint-max R]
+ll.py grade QID --verdict V [--miss-class C] [--wrong-model W]
 ll.py dispute QID --reason S
 ll.py levels [--topic T]                      # ASCII map, runs verify first
 ll.py due [--size 8]
 ll.py verify                                  # transcript fallback for pending answers
-ll.py prop add|similar ...  ll.py chain add ...  ll.py distill-input
+ll.py prop add ...  ll.py chain add ...  ll.py distill-input
 ll.py snippet FILE:START-END [--rev R]        # verbatim lines plus a content hash
 ll.py ledger --topic T
 ll.py export [--vault PATH]
@@ -409,11 +409,11 @@ A human study is future work.
 4. `levels` and `due` exactly as specified, until the script tests pass.
 5. The witness hook, `answer --from-witness`, confidence parsing, and the `verify` fallback.
 6. `status`, written for a reader who has just lost all context.
-7. Propositions, chains, `similar`, `distill-input`, `snippet` and `ledger`.
+7. Propositions, chains, `distill-input`, `snippet` and `ledger`.
 8. `export` and its layout test.
 9. `hook post-commit`, `session-start`, `optin`, `offer`, and `install --print`.
 10. `agents/examiner.md` and `agents/distiller.md`.
-11. `references/pedagogy.md` and `references/ledger.md`, in our own wording.
+11. `references/pedagogy.md`, in our own wording.
 12. SKILL.md last, under 3,500 tokens measured, with the non-negotiables and the `status`-first rule in the first 1,500.
 13. Run with-skill evals (GREEN), close loopholes (REFACTOR), then trigger evals.
 14. Register the `L` prefix, the store, and the fixtures in evidence-protocol.md, add the README entry, and extend the pipeline line to say learn-ledger tests the human on what the others explain.

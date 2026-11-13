@@ -16,8 +16,8 @@ Your only input is `python3 LL_PATH distill-input [--topic T]`, which prints the
 
 A proposition is one checkable statement the learner should hold, in plain words, true on its own.
 Write it as a claim, not a topic ("a default argument is evaluated once, when the def runs", not "default arguments").
-Before adding one, run `python3 LL_PATH prop similar "<statement>"`.
-If a near match exists, merge into it with `prop add "<statement>" --id <existing id> --provenance <teach event ids>`.
+`prop add` refuses a near-duplicate and names the existing id.
+Then merge into it with `prop add "<statement>" --id <existing id> --provenance <teach event ids>`.
 If you still think yours differs, add it with `--force --reason "<how it differs>"`.
 
 ```
