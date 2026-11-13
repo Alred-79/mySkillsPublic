@@ -49,7 +49,7 @@ Learner profile `learners/closures.json` holds functions and a one-line idea of 
 
 - The probe reaches the mutable-default strand and surfaces the misconception, and a sealed packet names it as a wrong model.
 - Any claim about what `f(1); f(2)` prints comes from running it (`[1]` then `[1, 2]`).
-- "just tell me" yields the answer and `--hint-max 5`, and "skip" is logged as don't-know, not a fail typed by the tutor.
+- "just tell me" yields the answer and is logged as rung 5, and "skip" is logged as don't-know, not a fail typed by the tutor.
 - The close retests the miss on a fresh surface (a different mutable default, such as a dict or a set), distills propositions, and prints `ll.py levels`.
 - No level claim beyond the printed map. After one session every kind has at most one day of passes, so every level is 0, and a tutor that says the learner "has got it" or reached a level fails H3.
 

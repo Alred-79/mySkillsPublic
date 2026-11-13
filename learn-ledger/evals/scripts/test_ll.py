@@ -49,9 +49,9 @@ class Store:
         data = {"session_id": session, "hook_event_name": "UserPromptSubmit", "prompt": prompt, "cwd": str(self.dir)}
         return self.run("hook", "witness", stdin=json.dumps(data), CLAUDE_CODE_SESSION_ID=session, **env)
 
-    def seal(self, question="What does f() return?", answer="42", kind="K2", node="n", **extra):
+    def seal(self, question="What does f() return?", answer="42", kind="K2", node="n", LL_NOW=NOW, **extra):
         pkt = dict({"question": question, "answer": answer, "wrong_models": ["43, off by one"]}, **extra)
-        out = self.run("seal", "--node", node, "--kind", kind, stdin=json.dumps(pkt)).stdout
+        out = self.run("seal", "--node", node, "--kind", kind, stdin=json.dumps(pkt), LL_NOW=LL_NOW).stdout
         return re.match(r"(q\d+)", out).group(1)
 
     def cleanup(self):
@@ -202,9 +202,29 @@ class Gates(unittest.TestCase):
         self.s.run("reveal", q)
         self.s.witness("42 @60")
         self.s.run("answer", q, "--from-witness")
-        self.s.run("grade", q, "--verdict", "pass", "--hint-max", "1")
+        self.s.run("grade", q, "--verdict", "pass")
         answers = [e for e in self.s.events() if e["type"] == "answer"]
         self.assertEqual([a["text"] for a in answers], ["41", "42"])
+
+    def test_hint_rung_is_counted_from_retries_not_trusted(self):
+        q = self.s.seal()
+        self.s.run("pose", q)
+        for t in ("1", "2", "3", "4", "42"):
+            self.s.witness(t)
+            self.s.run("answer", q, "--from-witness")
+            if t == "1":
+                self.s.run("reveal", q)
+        self.s.run("grade", q, "--verdict", "pass")
+        g = [e for e in self.s.events() if e["type"] == "grade"][0]
+        self.assertEqual(g["hint_max"], 3)  # four retries, rungs R0 to R3, so it does not qualify
+
+    def test_just_tell_me_is_rung_five_and_cannot_pass(self):
+        q = self.s.seal()
+        self.s.run("pose", q)
+        self.s.witness("just tell me")
+        self.s.run("answer", q, "--from-witness")
+        self.s.run("reveal", q)
+        self.assertNotEqual(self.s.run("grade", q, "--verdict", "pass", ok=False).returncode, 0)
 
     def test_dont_know_cannot_pass(self):
         q = self.s.seal()
@@ -272,6 +292,46 @@ class Witness(unittest.TestCase):
         ans = [e for e in self.s.events() if e["type"] == "answer"][0]
         self.assertEqual((ans["text"], ans["confidence"], ans["witness_id"]), ("42", 90, wid))
 
+    def test_witness_for_another_question_is_not_taken(self):
+        q1 = self.s.seal()
+        q2 = self.s.seal(question="Other?")
+        self.s.run("pose", q1)
+        self.s.witness("for q1")
+        self.s.run("answer", q1, "--from-witness")
+        self.s.run("reveal", q1)
+        self.s.run("pose", q2)
+        self.s.witness("meant for q2")
+        r = self.s.run("answer", q1, "--from-witness", ok=False)
+        self.assertIn("no witnessed prompt", r.stderr)
+
+    def test_question_posed_on_an_earlier_day_stops_witnessing(self):
+        q = self.s.seal()
+        self.s.run("pose", q)
+        self.s.witness("unrelated, next morning", LL_NOW="2026-03-11T09:00:00-05:00")
+        self.assertEqual(self.wlines(), [])
+
+    def test_hash_mismatch_closes_the_question(self):
+        q = self.s.seal()
+        self.s.run("pose", q)
+        self.s.witness("42")
+        self.s.run("answer", q, "--from-witness")
+        (self.s.dir / "sealed" / f"{q}.json").write_text("{}")
+        self.s.run("reveal", q, ok=False)
+        self.s.witness("anything after")
+        self.assertEqual(len(self.wlines()), 1)
+        self.assertIn("no open question", self.s.run("status").stdout)
+
+    def test_k1_earned_across_days_in_one_long_session(self):
+        for i, day in enumerate(("2026-03-10", "2026-03-12")):
+            t = f"{day}T09:00:00-05:00"
+            q = self.s.seal(question=f"Recall {i}?", kind="K1", LL_NOW=t)
+            self.s.run("pose", q, LL_NOW=t)
+            self.s.witness("42", LL_NOW=t)
+            self.s.run("answer", q, "--from-witness", LL_NOW=t)
+            self.s.run("reveal", q, LL_NOW=t)
+            self.s.run("grade", q, "--verdict", "pass", LL_NOW=t)
+        self.assertTrue(kind_met(self.s, "K1"))
+
     def test_hook_never_fails_on_bad_input(self):
         r = self.s.run("hook", "witness", stdin="not json")
         self.assertEqual((r.returncode, r.stdout), (0, ""))
@@ -299,7 +359,7 @@ class Witness(unittest.TestCase):
             {"type": "user", "timestamp": "2026-03-10T14:00:30.000Z",
              "message": {"role": "user", "content": "maybe b, but I'm not sure"}}) + "\n")
         out = self.s.run("verify", LL_NOW="2026-03-10T10:00:00-05:00").stdout
-        self.assertIn("unwitnessed", out)  # b is a substring of the message and of the question, not a match
+        self.assertIn("unwitnessed", out)  # b is only part of a message, not a whole-message match
         q2 = self.s.seal(question="What is six times seven?")
         self.s.run("pose", q2, LL_NOW="2026-03-10T09:10:00-05:00")
         self.s.run("answer", q2, "--text", "42", LL_NOW="2026-03-10T09:11:00-05:00")
@@ -310,6 +370,17 @@ class Witness(unittest.TestCase):
         v = [e for e in self.s.events() if e["type"] == "verify" and e["qid"] == q2][0]
         self.assertEqual(v["witness"], "witnessed")
         self.assertEqual(v["matched"]["file"], "sess-A.jsonl")
+
+    def test_short_answer_inside_the_question_text_can_still_be_witnessed(self):
+        q = self.s.seal(question="What does f(2) return?")
+        self.s.run("pose", q)
+        self.s.run("answer", q, "--text", "2")
+        proj = self.s.dir / "projects" / "-p"
+        proj.mkdir(parents=True)
+        (proj / "sess-A.jsonl").write_text(json.dumps(
+            {"type": "user", "timestamp": "2026-03-10T14:00:30.000Z", "message": {"role": "user", "content": "2"}}) + "\n")
+        self.assertIn("witnessed", self.s.run("verify", LL_NOW="2026-03-10T10:00:00-05:00").stdout)
+        self.assertNotIn("unwitnessed", self.s.run("verify", LL_NOW="2026-03-10T10:00:00-05:00").stdout)
 
     def test_text_fallback_without_transcript_is_unwitnessed(self):
         q = self.s.seal()
@@ -504,10 +575,7 @@ class Knowledge(unittest.TestCase):
     def tearDown(self):
         self.s.cleanup()
 
-    def test_similar_and_dedup_gate(self):
-        out = self.s.run("prop", "similar",
-                         "A LEFT JOIN keeps every row of the left table and fills unmatched right columns with NULL").stdout
-        self.assertIn("p0001", out)
+    def test_dedup_gate(self):
         r = self.s.run("prop", "add", "A LEFT JOIN keeps every left table row, filling unmatched right columns with NULL",
                        "--topic", "sql-joins", ok=False)
         self.assertIn("near-duplicate of p0001", r.stderr)

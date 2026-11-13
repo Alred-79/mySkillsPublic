@@ -3,7 +3,7 @@
 
 The only writer of the learning store. Levels, the review queue, offer limits
 and the Obsidian view are all computed here from the append-only event log,
-never by the model. See ../references/ledger.md for the rules.
+never by the model. See docs/specs/learn-ledger.md in the repo for the rules.
 
 Environment
   LEARN_LEDGER_HOME       store directory (default ~/.learn-ledger)
@@ -255,7 +255,11 @@ class Attempt:
         return bool(a) and self.witness_state(a) in ("hook", "witnessed")
 
     def hint_max(self) -> int:
-        return int(self.grade.get("hint_max") or 0)
+        """Highest hint rung used, derived from the log. The first answer needs no hint, each retry follows one rung (R0 first)."""
+        before = [x for x in self.answers if not self.grade or x["_i"] < self.grade["_i"]]
+        if any(x.get("told") for x in before):
+            return 5
+        return max(int((self.grade or {}).get("hint_max") or 0), len(before) - 2)
 
     def non_passing(self) -> bool:
         return self.verdict != "pass" or self.dont_know()
@@ -294,10 +298,10 @@ def build_attempts(evs: list[dict]) -> dict[str, Attempt]:
 
 
 def is_cold(a: Attempt, evs: list[dict], seals: dict[str, dict]) -> bool:
-    """No teach on the node and no reveal of another question on the node earlier this session."""
+    """No teach on the node and no reveal of another question on the node earlier the same session and day."""
     p = a.pose
     for e in evs[: p["_i"]]:
-        if e.get("session") != p.get("session"):
+        if e.get("session") != p.get("session") or e.get("day") != p.get("day"):
             continue
         if e["type"] == "teach" and e.get("node") == a.node:
             return False
@@ -533,17 +537,20 @@ def parse_answer(text: str) -> dict:
     if m:
         conf = max(0, min(100, int(m.group(1))))
         t = t[: m.start()].rstrip()
-    dk = t.lower() in ("idk", "?", "i don't know", "i dont know", "skip")
+    low = t.lower().rstrip(".!")
+    told = low in ("just tell me", "tell me")
+    dk = told or low in ("idk", "?", "i don't know", "i dont know", "skip")
     if dk:
         conf = None
-    return {"text": t, "confidence": conf, "dont_know": dk}
+    return {"text": t, "confidence": conf, "dont_know": dk, "told": told}
 
 
 def open_question(evs, session: str) -> dict | None:
     """The latest posed, ungraded, undisputed qid in this session."""
     att = build_attempts(evs)
     open_ = [a for a in att.values() if a.pose and not a.grade and not a.dispute
-             and a.pose.get("session") == session]
+             and a.pose.get("session") == session and a.pose.get("day") == today().isoformat()
+             and all(x.get("hash_ok") for x in a.reveals)]
     return max(open_, key=lambda a: a.pose["_i"]).pose if open_ else None
 
 
@@ -580,10 +587,8 @@ def run_verify(quiet: bool = False) -> list[str]:
             files = transcript_files(ans["session"])
             pose_t = parse_ts(a.pose["ts"])
             want = norm_text(ans["text"])
-            question = norm_text(json.loads((home() / "sealed" / f"{a.qid}.json").read_text()).get("question", "")) \
-                if (home() / "sealed" / f"{a.qid}.json").exists() else ""
             found = None
-            if want and want not in question:
+            if want:
                 for f in files:
                     try:
                         for t, txt in transcript_user_texts(f):
@@ -757,7 +762,7 @@ def cmd_answer(a):
     since_t = parse_ts(since)
     cands = [w for w in read_jsonl(home() / "witness.jsonl")
              if w.get("session") == at.pose["session"] and parse_ts(w["ts"]) >= pose_t
-             and parse_ts(w["ts"]) >= since_t and w["id"] not in used]
+             and parse_ts(w["ts"]) >= since_t and w["id"] not in used and w.get("qid") in (None, a.qid)]
     if not cands:
         raise LLError(
             f"no witnessed prompt in session {at.pose['session']} since {a.qid} was posed. "
@@ -813,15 +818,15 @@ def cmd_grade(a):
     if a.verdict == "pass" and at.answers[-1].get("dont_know"):
         raise LLError("a don't-know answer cannot be graded pass.")
     ev = append_event("grade", at.seal.get("mode"), qid=a.qid, verdict=a.verdict, miss_class=a.miss_class,
-                      wrong_model=a.wrong_model, hint_max=a.hint_max)
-    print(f"graded {a.qid} {a.verdict} (event {ev['id']})")
+                      wrong_model=a.wrong_model, hint_max=at.hint_max())
+    print(f"graded {a.qid} {a.verdict} at hint rung {at.hint_max()} (event {ev['id']})")
 
 
 def cmd_dispute(a):
     require_store()
     at, _ = get_attempt(a.qid)
     append_event("dispute", at.seal.get("mode"), qid=a.qid, reason=a.reason)
-    print(f"{a.qid} disputed and dropped from levels. Run adversarial-verify on `ll.py ledger` to settle the key.")
+    print(f"{a.qid} disputed and dropped from levels.")
 
 
 def cmd_levels(a):
@@ -894,13 +899,6 @@ def cmd_status(a):
 
 def cmd_prop(a):
     require_store()
-    if a.action == "similar":
-        th = a.threshold if a.threshold is not None else load_config()["similar_threshold"]
-        hits = sorted(((overlap(a.statement, p["statement"]), pid, p["statement"]) for pid, p in props().items()),
-                      reverse=True)
-        hits = [h for h in hits if h[0] >= th]
-        print("\n".join(f"{pid}  {sc:.2f}  {st}" for sc, pid, st in hits) or "no similar proposition")
-        return
     existing = props()
     pid = check_id(a.id or f"p{len(existing) + 1:04d}")
     if pid not in existing and not a.force:
@@ -950,7 +948,8 @@ def cmd_distill_input(a):
         todo = [t for t in todo if t["topic"] == a.topic]
     print(json.dumps({"teach_steps": todo,
                       "existing_propositions": [{"id": i, "statement": p["statement"], "topic": p.get("topic")}
-                                                for i, p in props().items()]}, indent=2, ensure_ascii=False))
+                                                for i, p in props().items()
+                                                if not a.topic or p.get("topic") == a.topic]}, indent=2, ensure_ascii=False))
 
 
 SNIP = re.compile(r"^(?P<file>.+?):(?P<a>\d+)(?:-(?P<b>\d+))?(?:@(?P<rev>[\w./-]+))?$")
@@ -1264,16 +1263,16 @@ def main(argv=None):
     p = sp.add_parser("reveal"); p.add_argument("qid"); p.set_defaults(f=cmd_reveal)
     p = sp.add_parser("grade"); p.add_argument("qid"); p.add_argument("--verdict", required=True, choices=VERDICTS)
     p.add_argument("--miss-class", choices=MISS_CLASSES); p.add_argument("--wrong-model")
-    p.add_argument("--hint-max", type=int, default=0, choices=range(0, 6)); p.set_defaults(f=cmd_grade)
+    p.set_defaults(f=cmd_grade)
     p = sp.add_parser("dispute"); p.add_argument("qid"); p.add_argument("--reason", required=True)
     p.set_defaults(f=cmd_dispute)
     p = sp.add_parser("levels"); p.add_argument("--topic"); p.set_defaults(f=cmd_levels)
     p = sp.add_parser("due"); p.add_argument("--size", type=int); p.add_argument("--json", action="store_true")
     p.set_defaults(f=cmd_due)
     p = sp.add_parser("verify"); p.set_defaults(f=cmd_verify)
-    p = sp.add_parser("prop"); p.add_argument("action", choices=["add", "similar"]); p.add_argument("statement")
+    p = sp.add_parser("prop"); p.add_argument("action", choices=["add"]); p.add_argument("statement")
     p.add_argument("--topic"); p.add_argument("--id"); p.add_argument("--aliases"); p.add_argument("--source")
-    p.add_argument("--provenance"); p.add_argument("--threshold", type=float); p.add_argument("--force", action="store_true")
+    p.add_argument("--provenance"); p.add_argument("--force", action="store_true")
     p.add_argument("--reason"); p.set_defaults(f=cmd_prop)
     p = sp.add_parser("chain"); p.add_argument("action", choices=["add"]); p.add_argument("--premises", required=True)
     p.add_argument("--conclusion", required=True); p.add_argument("--id"); p.add_argument("--provenance")
