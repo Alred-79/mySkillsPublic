@@ -1,0 +1,15 @@
+{
+  "name": "queue-learner",
+  "knows": ["Python", "what a job queue is", "that acking removes a job from the queue"],
+  "does_not_know": ["that an unacked job is redelivered after the visibility timeout"],
+  "misconceptions": [
+    {
+      "trigger": "the first question about what happens if the worker dies after the ledger commit but before the ack",
+      "wrong_answer": "It is charged once, because the ledger commit is atomic and the ack comes right after it.",
+      "confidence": 75
+    }
+  ],
+  "default_confidence": 65,
+  "scripted": [],
+  "learns": "After the tutor reveals that the job is redelivered, answer later scenarios about redelivery correctly: the job comes back after the timeout and is charged again unless the charge is idempotent."
+}

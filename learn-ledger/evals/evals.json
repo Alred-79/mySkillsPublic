@@ -1,0 +1,92 @@
+{
+  "skill_name": "learn-ledger",
+  "notes": "Two layers. (1) Script tests, deterministic and model-free: python3 evals/scripts/test_ll.py, must be 100%. They run forged logs from evals/fixtures/logs (built by scripts/make_fixtures.py) and real git repos through every level, schedule, witness, offer and export rule. (2) Multi-turn model evals: scripts/run_sim.py drives each case in ONE claude -p stream-json process against a simulated learner (fixtures/learners), sending each reply only after the previous turn's result, because skill hooks do not survive --resume and a message queued mid-turn can miss the witness. scripts/score.py scores the mechanical HARD FAIL rows from the store and the stream, and judge/rubric.md scores the rest. Arms are skill and baseline (same prompts, same simulator, no skill), >=3 reps, >=2 model tiers per evidence-protocol.md. Store-based rows cannot be satisfied by the baseline by construction, so the baseline is scored on the behavior proxies in expected.md. Model evals have not been run yet; see expected.md.",
+  "evals": [
+    {
+      "id": 1,
+      "name": "teach-closures",
+      "prompt": "Teach me Python closures and default arguments properly. I keep getting bitten by them.",
+      "files": [],
+      "sim": {"learner": "closures.json"},
+      "expected_output": "Runs status, probes before teaching, and the probe surfaces the seeded misconception (default values re-evaluated per call), naming it as a wrong model. Every graded question is sealed and posed before the learner sees it, one question per message ending at the question. A miss gets one hint rung, the scripted 'just tell me' gets the answer logged as R5, 'skip' is logged as don't-know. Claims about what example code prints come from running it. Closes with retests of misses on a fresh surface, distills propositions, prints levels from ll.py and never states a level or mastery itself.",
+      "assertions": [
+        {"text": "HARD FAIL: every pose event in the store has an earlier seal event, and every assistant message that ends at a graded question corresponds to a pose (score.py H1)", "passed": null, "evidence": ""},
+        {"text": "HARD FAIL: every answer credited as witnessed matches text the simulator actually sent (score.py H2)", "passed": null, "evidence": ""},
+        {"text": "HARD FAIL: the tutor never states a level, N/5, or 'mastered' that an ll.py levels or status output did not print (score.py H3)", "passed": null, "evidence": ""},
+        {"text": "HARD FAIL: every stated output of example code matches an actual run of it in the stream (judge J6)", "passed": null, "evidence": ""},
+        {"text": "one question per message, and the message ends at the question (judge J1)", "passed": null, "evidence": ""},
+        {"text": "the probe surfaces the mutable-default misconception, and a sealed wrong model names it (judge J2, store)", "passed": null, "evidence": ""},
+        {"text": "a miss gets one hint rung, not the answer, unless the learner says 'just tell me' (judge J3)", "passed": null, "evidence": ""},
+        {"text": "every miss is retested on a fresh surface before close (judge J7, store)", "passed": null, "evidence": ""}
+      ]
+    },
+    {
+      "id": 2,
+      "name": "check-queue",
+      "prompt": "Quiz me on the commit I just made, I want to be sure I understand it.",
+      "files": ["fixtures/check-queue"],
+      "sim": {"learner": "queue.json", "repo": "check-queue", "preamble_file": "fixtures/check-queue/chat-history.md"},
+      "expected_output": "Dispatches the examiner with the range and repo only. The canary sentence from the chat ('we chose ack-after-commit for latency') never reaches the examiner's prompt. Questions concern behavior and failure modes, centrally that a crash between ledger.commit() and queue.ack() causes redelivery and a duplicate charge (python3 worker.py prints 2500 cents for one 1250-cent job). The sealed key cites worker.py. The learner misses once, gets the reveal and then the sealed backup scenario, not the same question reworded. Code shown is verbatim from the repo.",
+      "assertions": [
+        {"text": "HARD FAIL: the canary sentence 'ack-after-commit for latency' is absent from every Agent tool prompt in the stream (score.py H4)", "passed": null, "evidence": ""},
+        {"text": "HARD FAIL: every code block attributed to a repo file is a verbatim substring of that file (score.py H5)", "passed": null, "evidence": ""},
+        {"text": "HARD FAIL: every pose has an earlier seal, and credited answers match what the simulator sent (score.py H1, H2)", "passed": null, "evidence": ""},
+        {"text": "the questions concern behavior, failure modes or invariants, and at least one targets duplicate charge on redelivery (judge J4)", "passed": null, "evidence": ""},
+        {"text": "the sealed key for the redelivery question says the job is charged twice, and cites worker.py (store)", "passed": null, "evidence": ""},
+        {"text": "after the miss, the next question is the sealed backup scenario on the same concept, not the same question reworded (judge J5, store backup_of)", "passed": null, "evidence": ""}
+      ]
+    },
+    {
+      "id": 3,
+      "name": "review-due",
+      "prompt": "What's due for review? Let's do it.",
+      "files": ["fixtures/review-due/store"],
+      "sim": {"learner": "sql.json", "store": "review-due/store", "now": "2026-03-10T09:00:00-05:00"},
+      "expected_output": "Runs status and due. Reviews left-join K2, semi-join K2 and cross-join K3 in that order, writing a fresh question of each item's kind from that node's propositions, each sealed. Does not review inner-join or anti-join, which are not due. The left-join WHERE-filter misconception surfaces and is handled with a hint rung. Closes with a retest of the miss on a fresh surface.",
+      "assertions": [
+        {"text": "HARD FAIL: every pose has an earlier seal, and credited answers match what the simulator sent (score.py H1, H2)", "passed": null, "evidence": ""},
+        {"text": "HARD FAIL: no level or mastery claim beyond what ll.py printed (score.py H3)", "passed": null, "evidence": ""},
+        {"text": "review order and kinds match ll.py due: left-join K2, semi-join K2, cross-join K3, and no question on inner-join or anti-join before those (store seal order)", "passed": null, "evidence": ""},
+        {"text": "each review question is fresh, not a verbatim repeat of a sealed past question (store prompt_hash)", "passed": null, "evidence": ""},
+        {"text": "every miss is retested on a fresh surface before close (judge J7, store)", "passed": null, "evidence": ""}
+      ]
+    },
+    {
+      "id": 4,
+      "name": "review-single-node",
+      "prompt": "Quiz me on whatever is due.",
+      "files": ["fixtures/review-due/store-single-node"],
+      "sim": {"learner": "sql.json", "store": "review-due/store-single-node", "now": "2026-03-10T09:00:00-05:00"},
+      "expected_output": "ll.py due returns one item on one node with the single-node note. The tutor runs it without inventing interleaving, varies the surface, and says so briefly.",
+      "assertions": [
+        {"text": "reviews left-join K2 and states that only one node is due, varying the surface rather than pretending to interleave (judge J8)", "passed": null, "evidence": ""},
+        {"text": "HARD FAIL: every pose has an earlier seal (score.py H1)", "passed": null, "evidence": ""}
+      ]
+    },
+    {
+      "id": 5,
+      "name": "one-off",
+      "prompt": "what's a mutex?",
+      "files": [],
+      "sim": {},
+      "expected_output": "A plain, normal answer with no probe, no sealed question, no loop and no offer to start one beyond at most one short line.",
+      "assertions": [
+        {"text": "answers directly, with no quiz question posed and no seal or pose event in the store (store, judge J9)", "passed": null, "evidence": ""}
+      ]
+    },
+    {
+      "id": 6,
+      "name": "nag",
+      "prompt": "In this repo, add a retry helper with exponential backoff to worker.py and commit it.",
+      "files": ["fixtures/check-queue"],
+      "sim": {"repo": "check-queue", "install_hooks": true,
+              "scripted_followups": ["no thanks", "Now add a dead-letter helper to worker.py that moves a job after 5 failures, and commit it.", "Fix the typo 'teh' in README.md if there is one, otherwise add a one-line usage note to README.md, and commit it."]},
+      "expected_output": "The post-commit hook offers once after the first qualifying commit, in one short sentence after the task is done. The learner declines. No second offer follows the second qualifying commit in the same session, and the docs-only commit gets no offer.",
+      "assertions": [
+        {"text": "exactly one offer event in the store, followed by a decline event (store)", "passed": null, "evidence": ""},
+        {"text": "no assistant message after the decline offers a quiz or check (judge J9)", "passed": null, "evidence": ""},
+        {"text": "the offer came after the requested commit was done, in one sentence (judge J9)", "passed": null, "evidence": ""}
+      ]
+    }
+  ]
+}

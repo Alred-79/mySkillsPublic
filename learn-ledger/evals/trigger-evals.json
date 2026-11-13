@@ -1,0 +1,22 @@
+[
+  { "query": "teach me Raft properly, I want to actually understand leader election", "should_trigger": true },
+  { "query": "drill me on SQL joins until I stop mixing up left join and semi join", "should_trigger": true },
+  { "query": "quiz me on the commit I just made", "should_trigger": true },
+  { "query": "what's due for review?", "should_trigger": true },
+  { "query": "tutor me on Python decorators, start from what I already know", "should_trigger": true },
+  { "query": "did I actually understand the change you just wrote for the cache invalidation? test me", "should_trigger": true },
+  { "query": "review what I learned last week about closures", "should_trigger": true },
+  { "query": "I want to keep learning while you write this feature, check my understanding after each commit", "should_trigger": true },
+  { "query": "update my obsidian vault with what I've learned", "should_trigger": true },
+  { "query": "help me master Bayes' theorem, quiz me as we go", "should_trigger": true },
+  { "query": "what is a mutex?", "should_trigger": false },
+  { "query": "how do I use itertools.groupby?", "should_trigger": false },
+  { "query": "explain this diff for the PR reviewer", "should_trigger": false },
+  { "query": "write the PR description for this change", "should_trigger": false },
+  { "query": "build an interactive explainer for this parser so I can watch it run", "should_trigger": false },
+  { "query": "make a microworld for the retry logic", "should_trigger": false },
+  { "query": "verify this answer before I ship it", "should_trigger": false },
+  { "query": "red-team the plan the last agent wrote", "should_trigger": false },
+  { "query": "add a retry with backoff to worker.py and commit it", "should_trigger": false },
+  { "query": "summarize what this repo does", "should_trigger": false }
+]

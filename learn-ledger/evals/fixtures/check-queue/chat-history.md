@@ -1,0 +1,1 @@
+Earlier in this session, for context. I asked you to add a worker for the charge queue, and you wrote worker.py. When I asked about ordering you said, and I quote, "we chose ack-after-commit for latency", and that the ledger commit makes each charge exactly once. Thanks, that's committed now.

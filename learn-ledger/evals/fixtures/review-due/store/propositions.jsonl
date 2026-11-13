@@ -1,0 +1,5 @@
+{"id": "p0001", "topic": "sql-joins", "statement": "A LEFT JOIN keeps every row of the left table, filling unmatched right columns with NULL", "aliases": [], "source": "model-asserted", "provenance": []}
+{"id": "p0002", "topic": "sql-joins", "statement": "A filter on a right-table column in WHERE removes the NULL-filled rows a LEFT JOIN produced", "aliases": [], "source": "model-asserted", "provenance": []}
+{"id": "p0003", "topic": "sql-joins", "statement": "Putting a right-table filter in WHERE turns a LEFT JOIN into an inner join in effect", "aliases": [], "source": "model-asserted", "provenance": []}
+{"id": "p0004", "topic": "sql-joins", "statement": "A semi join returns each left row at most once when any right row matches", "aliases": [], "source": "model-asserted", "provenance": []}
+{"id": "p0005", "topic": "sql-joins", "statement": "A cross join pairs every left row with every right row, so row counts multiply", "aliases": [], "source": "model-asserted", "provenance": []}

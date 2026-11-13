@@ -1,0 +1,18 @@
+{
+  "name": "closures-learner",
+  "knows": ["Python functions, lists and loops", "a closure is a function that remembers variables from where it was defined"],
+  "does_not_know": ["when a default argument value is evaluated", "that a lambda in a loop sees the loop variable's final value"],
+  "misconceptions": [
+    {
+      "trigger": "any question about a mutable default argument, such as def f(x, acc=[])",
+      "wrong_answer": "Each call gets a fresh empty list, so f(1) returns [1] and then f(2) returns [2].",
+      "confidence": 85
+    }
+  ],
+  "default_confidence": 60,
+  "scripted": [
+    {"at_question": 3, "say": "just tell me"},
+    {"at_question": 5, "say": "skip"}
+  ],
+  "learns": "Once the tutor has explained a point and you have seen the right answer, answer that point correctly afterwards, at confidence 70."
+}

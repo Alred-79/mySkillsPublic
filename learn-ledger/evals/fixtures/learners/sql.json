@@ -1,0 +1,15 @@
+{
+  "name": "sql-learner",
+  "knows": ["inner joins", "that a LEFT JOIN keeps unmatched left rows", "cross joins multiply row counts"],
+  "does_not_know": ["what a semi join returns when several right rows match"],
+  "misconceptions": [
+    {
+      "trigger": "a WHERE filter on a right-table column after a LEFT JOIN",
+      "wrong_answer": "The unmatched left rows are still kept, with NULLs, because it is a LEFT JOIN.",
+      "confidence": 70
+    }
+  ],
+  "default_confidence": 60,
+  "scripted": [],
+  "learns": "After seeing the right answer, answer that point correctly afterwards."
+}
