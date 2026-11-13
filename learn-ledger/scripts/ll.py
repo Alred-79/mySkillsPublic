@@ -101,6 +101,27 @@ def norm_text(s: str) -> str:
     return " ".join(re.findall(r"[a-z0-9]+", s.lower()))
 
 
+ID_RE = re.compile(r"^[A-Za-z0-9_-]{1,32}$")
+
+
+def check_id(i: str) -> str:
+    if not ID_RE.match(i or ""):
+        raise LLError(f"id {i!r} must match [A-Za-z0-9_-]{{1,32}}")
+    return i
+
+
+def yaml_scalar(v) -> str:
+    """A JSON string is a valid YAML scalar, so no value can open a new key."""
+    return json.dumps(re.sub(r"[\r\n]+", " ", str(v)), ensure_ascii=False)
+
+
+def write_inside(root: Path, rel: str, text: str) -> None:
+    p = (root / rel).resolve()
+    if root.resolve() not in p.parents:
+        raise LLError(f"refusing to write {rel!r} outside {root}")
+    p.write_text(text, encoding="utf-8")
+
+
 def slugify(s: str, n: int = 48) -> str:
     out = re.sub(r"[^a-z0-9]+", "-", s.lower()).strip("-")
     return (out[:n].rstrip("-")) or "x"
@@ -558,18 +579,21 @@ def run_verify(quiet: bool = False) -> list[str]:
                 continue
             files = transcript_files(ans["session"])
             pose_t = parse_ts(a.pose["ts"])
-            found = False
-            for f in files:
-                try:
-                    for t, txt in transcript_user_texts(f):
-                        if t >= pose_t - dt.timedelta(seconds=1) and norm_text(ans["text"]) and \
-                                norm_text(ans["text"]) in norm_text(txt):
-                            found = True
-                            break
-                except OSError:
-                    continue
-                if found:
-                    break
+            want = norm_text(ans["text"])
+            question = norm_text(json.loads((home() / "sealed" / f"{a.qid}.json").read_text()).get("question", "")) \
+                if (home() / "sealed" / f"{a.qid}.json").exists() else ""
+            found = None
+            if want and want not in question:
+                for f in files:
+                    try:
+                        for t, txt in transcript_user_texts(f):
+                            if t >= pose_t - dt.timedelta(seconds=1) and norm_text(parse_answer(txt)["text"]) == want:
+                                found = {"file": f.name, "ts": t.isoformat()}
+                                break
+                    except OSError:
+                        continue
+                    if found:
+                        break
             age = now() - parse_ts(ans["ts"])
             if found:
                 state = "witnessed"
@@ -577,7 +601,7 @@ def run_verify(quiet: bool = False) -> list[str]:
                 continue  # the transcript is written asynchronously, try again later
             else:
                 state = "unwitnessed"
-            append_event("verify", a.seal.get("mode"), qid=a.qid, answer=ans["id"], witness=state)
+            append_event("verify", a.seal.get("mode"), qid=a.qid, answer=ans["id"], witness=state, matched=found)
             msgs.append(f"{a.qid} answer {ans['id']}: {state}")
     if not quiet:
         print("\n".join(msgs) if msgs else "nothing pending")
@@ -878,7 +902,7 @@ def cmd_prop(a):
         print("\n".join(f"{pid}  {sc:.2f}  {st}" for sc, pid, st in hits) or "no similar proposition")
         return
     existing = props()
-    pid = a.id or f"p{len(existing) + 1:04d}"
+    pid = check_id(a.id or f"p{len(existing) + 1:04d}")
     if pid not in existing and not a.force:
         th = load_config()["similar_threshold"]
         near = [(i, p["statement"]) for i, p in existing.items() if overlap(a.statement, p["statement"]) >= th]
@@ -903,7 +927,7 @@ def cmd_chain(a):
             raise LLError(f"unknown proposition {p}")
     if len(prem) < 1 or a.conclusion in prem:
         raise LLError("a chain needs premises that do not include its conclusion")
-    cid = a.id or f"c{len(chains()) + 1:04d}"
+    cid = check_id(a.id or f"c{len(chains()) + 1:04d}")
     append_line(home() / "chains.jsonl", {"id": cid, "premises": prem, "conclusion": a.conclusion,
                                           "provenance": [x for x in (a.provenance or "").split(",") if x]})
     print(f"{cid} added")
@@ -939,12 +963,17 @@ def read_snippet(spec: str, rev: str | None, cwd: str) -> tuple[str, list[str], 
     rev = rev or m.group("rev")
     f, start = m.group("file"), int(m.group("a"))
     end = int(m.group("b") or start)
+    if os.path.isabs(f):
+        raise LLError("snippet takes a path relative to the repo, not an absolute path")
+    root = Path(repo_root(cwd) or cwd).resolve()
+    target = (Path(cwd) / f).resolve()
+    if root not in target.parents or home().resolve() in [target, *target.parents]:
+        raise LLError(f"{f} is outside the repo or inside the learn-ledger store")
+    rel = str(target.relative_to(root))
     if rev:
-        root = repo_root(cwd) or cwd
-        rel = os.path.relpath(os.path.abspath(os.path.join(cwd, f)), root)
-        text = git(root, "show", f"{rev}:{rel}")
+        text = git(str(root), "show", f"{rev}:{rel}")
     else:
-        text = Path(cwd, f).read_text(encoding="utf-8")
+        text = target.read_text(encoding="utf-8")
     lines = text.splitlines()
     if start < 1 or end > len(lines) or start > end:
         raise LLError(f"{f} has {len(lines)} lines, so {start}-{end} is out of range")
@@ -1031,7 +1060,8 @@ def cmd_export(a):
     run_verify(quiet=True)
     evs = events()
     pm, cm = props(), chains()
-    names = {pid: f"{pid}-{slugify(p['statement'])}" for pid, p in pm.items()}
+    names = {pid: f"{slugify(pid, 32)}-{slugify(p['statement'])}" for pid, p in pm.items()}
+    cnames = {cid: slugify(cid, 32) for cid in cm}
     (out / "README.md").write_text(
         f"{EXPORT_MARK}\n# learn-ledger\n\nThis folder is a generated view. Edits here are overwritten on the next export.\n"
         f"The source of truth is the event log in `{home()}`.\n", encoding="utf-8")
@@ -1048,25 +1078,26 @@ def cmd_export(a):
     by_topic: dict[str, list[str]] = {}
     for pid, p in pm.items():
         by_topic.setdefault(p.get("topic") or "untopiced", []).append(pid)
-        fm = ["---", f'id: "{pid}"', f'topic: "{p.get("topic") or ""}"', f'source: "{p.get("source") or "model-asserted"}"']
+        fm = ["---", f"id: {yaml_scalar(pid)}", f"topic: {yaml_scalar(p.get('topic') or '')}",
+              f"source: {yaml_scalar(p.get('source') or 'model-asserted')}"]
         if p.get("aliases"):
             fm.append("aliases:")
-            fm += [f'  - "{x}"' for x in p["aliases"]]
+            fm += [f"  - {yaml_scalar(x)}" for x in p["aliases"]]
         fm.append("---")
         body = [p["statement"], "", f"Source: {p.get('source') or 'model-asserted'}",
                 f"Provenance: {', '.join(p.get('provenance') or []) or 'none recorded'}"]
         for cid in premise_of.get(pid, []):
-            body.append(f"Premise of [[{cid}]]")
-        (out / "propositions" / f"{names[pid]}.md").write_text("\n".join(fm + [""] + body) + "\n", encoding="utf-8")
+            body.append(f"Premise of [[{cnames[cid]}]]")
+        write_inside(out, f"propositions/{names[pid]}.md", "\n".join(fm + [""] + body) + "\n")
     for cid, c in cm.items():
         prem = "; ".join(pm[p]["statement"] for p in c["premises"] if p in pm)
         concl = names.get(c["conclusion"], c["conclusion"])
-        text = (f"---\nid: \"{cid}\"\n---\nPremises, used together: {prem}\n\n"
+        text = (f"---\nid: {yaml_scalar(cid)}\n---\nPremises, used together: {prem}\n\n"
                 f"These jointly imply [[{concl}]]\n\nProvenance: {', '.join(c.get('provenance') or []) or 'none recorded'}\n")
-        (out / "chains" / f"{cid}.md").write_text(text, encoding="utf-8")
+        write_inside(out, f"chains/{cnames[cid]}.md", text)
     for t, pids in by_topic.items():
         links = "\n".join(f"- [[{names[p]}]]" for p in sorted(pids))
-        (out / "topics" / f"{slugify(t)}.md").write_text(f"# {t}\n\n{links}\n", encoding="utf-8")
+        write_inside(out, f"topics/{slugify(t)}.md", f"# {t}\n\n{links}\n")
     print(f"exported {len(pm)} propositions, {len(cm)} chains, {len(by_topic)} topics to {out}")
 
 
